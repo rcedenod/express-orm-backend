@@ -6,7 +6,7 @@ const app = express();
 const cors = require('cors');
 const session = require('express-session');
 const { profile } = require('console');
-const path = require('./views/control-panel');
+const path = require('path');
 const port = 3000;
 
 app.use(cors({

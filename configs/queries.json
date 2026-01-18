@@ -23,7 +23,7 @@
     "security":
         {
             "loadPermission" : "SELECT pr.id_profile, ob.id_object, ob.object, me.id_method, me.method FROM security.permission_method pm INNER JOIN security.profile pr ON pm.fk_id_profile = pr.id_profile INNER JOIN security.method me ON pm.fk_id_method = me.id_method INNER JOIN security.object ob ON me.fk_id_object = ob.id_object",
-            "loadMenu" : "SELECT pr.id_profile, me.menu, me.fk_id_module FROM security.permission_menu pm  INNER JOIN security.profile pr ON pm.fk_id_profile = pr.id_profile INNER JOIN security.menu me ON pm.fk_id_menu = me.id_menu",
+            "loadMenu" : "SELECT pr.id_profile, me.menu FROM security.permission_menu pm  INNER JOIN security.profile pr ON pm.fk_id_profile = pr.id_profile INNER JOIN security.menu me ON pm.fk_id_menu = me.id_menu",
             "createUser" : "INSERT INTO security.user (email, password, number_id, fk_id_person) VALUES ($1, $2, $3, $4) RETURNING id_user",
             "updatePassword": "UPDATE security.user SET password = $1 WHERE email = $2",
             "getUserByNumberAndPassword": "SELECT * FROM security.user WHERE number_id = $1 AND password = $2",
@@ -40,7 +40,7 @@
             "deleteUserProfileByUserId": "DELETE FROM security.user_profile WHERE fk_id_user =  ANY($1::int[])",
             "deleteUser": "DELETE FROM security.user WHERE id_user = ANY($1::int[])",
             "getUserById": "SELECT id_user, fk_id_person FROM security.user WHERE id_user = ANY($1::int[])",
-            "getMenus": "SELECT me.id_menu, me.menu, mo.module, mo.id_module FROM security.menu me INNER JOIN security.module mo ON mo.id_module = me.fk_id_module",
+            "getMenus": "SELECT me.id_menu, me.menu, mo.module, mo.id_module FROM security.menu me INNER JOIN security.module mo ON mo.id_module ",
             "getModules": "SELECT * FROM security.module",
             "createMenu": "INSERT INTO security.menu (menu, fk_id_module) VALUES ($1, $2)",
             "updateMenu": "UPDATE security.menu SET menu = $1, fk_id_module = $2 WHERE id_menu = $3",
@@ -57,7 +57,7 @@
             "createPermissionMethod": "INSERT INTO security.permission_method (fk_id_profile, fk_id_method) VALUES ($1, $2)",
             "updatePermissionMethod": "UPDATE security.permission_method SET fk_id_profile = $1, fk_id_method = $2 WHERE id_permission_method = $3",
             "deletePermissionMethods": "DELETE FROM security.permission_method WHERE id_permission_method = ANY($1::int[])",
-            "getPermissionMenus": "SELECT prm.id_permission_method, prm.fk_id_profile, pr.profile, prm.fk_id_menu, me.menu, mo.id_module FROM security.permission_menu prm INNER JOIN security.profile pr ON pr.id_profile = prm.fk_id_profile INNER JOIN security.menu me ON me.id_menu = prm.fk_id_menu INNER JOIN security.module mo ON mo.id_module = me.fk_id_module",
+            "getPermissionMenus": "SELECT prm.id_permission_method, prm.fk_id_profile, pr.profile, prm.fk_id_menu, me.menu, mo.id_module FROM security.permission_menu prm INNER JOIN security.profile pr ON pr.id_profile = prm.fk_id_profile INNER JOIN security.menu me ON me.id_menu = prm.fk_id_menu INNER JOIN security.module mo ON mo.id_module ",
             "getUserProfiles": "SELECT up.fk_id_profile, p.profile FROM security.user_profile up JOIN security.profile p on up.fk_id_profile = p.id_profile JOIN security.user u ON up.fk_id_user = u.id_user WHERE u.email = $1",
             "createPermissionMenu": "INSERT INTO security.permission_menu (fk_id_profile, fk_id_menu) VALUES ($1, $2)",
             "updatePermissionMenu": "UPDATE security.permission_menu SET fk_id_profile = $1, fk_id_menu = $2 WHERE id_permission_method = $3",
