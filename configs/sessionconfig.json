@@ -1,0 +1,16 @@
+{
+    "secret": "biblioteca",
+    "resave": false,
+    "saveUninitialized": true,
+    "cookie": {
+        "maxAge": 1800000,
+        "secure": false,
+        "sameSite": "strict"
+    },
+    "sessionObject": {
+        "userId": "",
+        "userName": "",
+        "profile": "",
+        "status": ""
+    }
+}
