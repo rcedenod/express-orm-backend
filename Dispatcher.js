@@ -6,6 +6,7 @@ const app = express();
 const cors = require('cors');
 const session = require('express-session');
 const { profile } = require('console');
+const path = require('./views/control-panel');
 const port = 3000;
 
 app.use(cors({
@@ -19,6 +20,23 @@ app.use(express.json()); // Esto asegura que req.body sea parseado correctamente
 global.resetCodes = {};
 global.ss = new (require('./Session'))(app);
 global.database = new (require('./DataBase'))(() => {global.sc = new (require('./Security'))(app);});
+
+  // Importar path al inicio del archivo si no está
+  app.get('/control-panel', (req, res) => {
+      // 1. Verificar si hay sesión
+      if (!global.ss.sessionExist(req)) {
+          return res.status(401).send("Debes iniciar sesión primero.");
+      }
+
+      // 2. Verificar si es ADMIN (Asumiendo que el ID 1 es Admin)
+      // El objeto sessionObject tiene el perfil actual
+      if (global.ss.sessionObject.profile !== 1) { 
+          return res.status(403).send("Acceso denegado. Solo administradores.");
+      }
+
+      // 3. Servir el archivo HTML
+      res.sendFile(path.join(__dirname, 'views', 'control-panel.html'));
+  });
 
   app.post('/login', async (req, res) => {
     if (ss.sessionExist(req)) {

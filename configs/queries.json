@@ -5,7 +5,20 @@
             "createPerson" : "INSERT INTO public.person (name, last_name, birth_date) VALUES ($1, $2, $3) RETURNING id_person",
             "getPeople": "SELECT p.id_person, p.name, p.last_name, CONCAT(p.name, ' ', p.last_name) AS fullname FROM person as p",
             "updatePerson": "UPDATE public.person SET name = $1, last_name = $2, birth_date = $3 WHERE id_person = $4",
-            "deletePerson": "DELETE FROM public.person WHERE id_person =  ANY($1::int[])"
+            "deletePerson": "DELETE FROM public.person WHERE id_person =  ANY($1::int[])",
+
+            "createBoard": "INSERT INTO public.boards (name, description, fk_id_owner) VALUES ($1, $2, $3) RETURNING id_board",
+            "addBoardMember": "INSERT INTO public.board_members (fk_id_board, fk_id_user, role) VALUES ($1, $2, $3)",
+            "getBoardsByUser": "SELECT b.*, bm.role FROM public.boards b INNER JOIN public.board_members bm ON b.id_board = bm.fk_id_board WHERE bm.fk_id_user = $1 ORDER BY b.created_at DESC",
+            
+            "createList": "INSERT INTO public.lists (fk_id_board, name, position) VALUES ($1, $2, $3) RETURNING id_list",
+            
+            "createTask": "INSERT INTO public.tasks (fk_id_list, title, description, fk_id_assigned_user, position, due_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_task",
+            "updateTaskPosition": "UPDATE public.tasks SET fk_id_list = $1, position = $2 WHERE id_task = $3",
+            "getTasksByBoard": "SELECT t.*, l.id_list, l.name as list_name FROM public.tasks t INNER JOIN public.lists l ON t.fk_id_list = l.id_list WHERE l.fk_id_board = $1 ORDER BY l.position, t.position",
+            
+            "checkBoardAccess": "SELECT 1 FROM public.board_members WHERE fk_id_board = $1 ANDfk_id_user = $2",
+            "checkListAccess": "SELECT 1 FROM public.lists l INNER JOIN public.board_members bm ON l.fk_id_board = bm.fk_id_board WHERE l.id_list = $1 AND bm.fk_id_user = $2"
         },
     "security":
         {

@@ -232,7 +232,26 @@ const MethodBO = class {
       console.error("Error en deletePermissionMethods:", error);
       return { sts: false, msg: "Error al eliminar los métodos" };
     }
-  }  
+  }
+  
+  async syncPermissions(params) {
+    const { id_profile, method_ids } = params; // method_ids es un array [1, 2, 5]
+    
+    // 1. Borrar todos los permisos actuales de este perfil
+    // Necesitas una query "deletePermissionsByProfile" en queries.json
+    await database.executeQuery("security", "deletePermissionsByProfile", [id_profile]);
+
+    // 2. Insertar los nuevos
+    for (const id_method of method_ids) {
+        await database.executeQuery("security", "createPermissionMethod", [id_profile, id_method]);
+        // Recuerda actualizar la caché de seguridad en memoria (sc.addMethodPermission...)
+    }
+    
+    // Recargar permisos en memoria
+    await global.sc.loadPermission(); 
+    
+    return { sts: true, msg: "Permisos sincronizados correctamente" };
+  }
 };
   
 module.exports = MethodBO;
