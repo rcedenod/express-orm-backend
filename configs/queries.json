@@ -53,7 +53,10 @@
             "createMethod": "INSERT INTO security.method (method, fk_id_object) VALUES ($1, $2)",
             "updateMethod": "UPDATE security.method SET method = $1, fk_id_object = $2 WHERE id_method = $3",
             "deleteMethods": "DELETE FROM security.method WHERE id_method = ANY($1::int[])",
+            
             "getPermissionMethods": "SELECT prm.id_permission_method, prm.fk_id_profile, pr.profile, prm.fk_id_method, me.method, ob.object FROM security.permission_method prm INNER JOIN security.profile pr ON pr.id_profile = prm.fk_id_profile INNER JOIN security.method me ON me.id_method = prm.fk_id_method INNER JOIN security.object ob ON ob.id_object = me.fk_id_object",
+            "deletePermissionsByProfile": "DELETE FROM security.permission_method WHERE fk_id_profile = $1",
+            
             "createPermissionMethod": "INSERT INTO security.permission_method (fk_id_profile, fk_id_method) VALUES ($1, $2)",
             "updatePermissionMethod": "UPDATE security.permission_method SET fk_id_profile = $1, fk_id_method = $2 WHERE id_permission_method = $3",
             "deletePermissionMethods": "DELETE FROM security.permission_method WHERE id_permission_method = ANY($1::int[])",

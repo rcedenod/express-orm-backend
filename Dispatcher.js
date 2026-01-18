@@ -14,12 +14,31 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json()); // Esto asegura que req.body sea parseado correctamente
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Objeto global para almacenar los códigos de restablecimiento de contraseña
 // Estructura: { [email]: { code: "123456", expires: timestamp } }
 global.resetCodes = {};
 global.ss = new (require('./Session'))(app);
 global.database = new (require('./DataBase'))(() => {global.sc = new (require('./Security'))(app);});
+
+  // 3. (Opcional) Redirigir la raíz '/' al login
+  app.get('/', (req, res) => {
+      res.redirect('/login-view');
+  });
+
+  app.get('/login-view', (req, res) => {
+      // Si ya tiene sesión, lo mandamos directo al panel
+      if (global.ss.sessionExist(req)) {
+          return res.redirect('/control-panel');
+      }
+      res.sendFile(path.join(__dirname, 'views', 'login.html'));
+  });
+
+  // 2. Ruta para la pantalla de Registro
+  app.get('/register', (req, res) => {
+      res.sendFile(path.join(__dirname, 'views', 'register.html'));
+  });
 
   // Importar path al inicio del archivo si no está
   app.get('/control-panel', (req, res) => {

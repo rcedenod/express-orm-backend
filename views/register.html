@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Usuario</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { text-align: center; color: #333; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 15px; }
+        button:hover { background-color: #218838; }
+        .link { text-align: center; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Crear Cuenta</h2>
+        <form id="registerForm">
+            <div class="grid">
+                <input type="text" id="name" placeholder="Nombre" required>
+                <input type="text" id="last_name" placeholder="Apellido" required>
+            </div>
+            <input type="text" id="number_id" placeholder="Cédula / ID" required>
+            <label style="font-size:12px; color:#666; margin-left:2px;">Fecha de Nacimiento</label>
+            <input type="date" id="birth_date" required>
+            
+            <input type="email" id="email" placeholder="Correo electrónico" required style="margin-top:15px;">
+            <input type="password" id="password" placeholder="Contraseña" required>
+            
+            <button type="submit">Registrarse</button>
+        </form>
+        <div class="link">
+            ¿Ya tienes cuenta? <a href="/login-view">Inicia sesión</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                name: document.getElementById('name').value,
+                last_name: document.getElementById('last_name').value,
+                number_id: document.getElementById('number_id').value,
+                birth_date: document.getElementById('birth_date').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/createUser', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+
+                if (data.sts) {
+                    alert('Usuario creado correctamente. Ahora puedes iniciar sesión.');
+                    window.location.href = '/login-view';
+                } else {
+                    alert('Error: ' + (data.msg || 'No se pudo crear el usuario'));
+                }
+            } catch (err) {
+                alert('Error de conexión con el servidor');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -108,7 +108,7 @@ const MethodBO = class {
     //Permisos a metodos
     async getPermissionMethods(params) {
       try {
-        const result = await database.executeQuery("security", "getpermissionmethods", []);
+        const result = await database.executeQuery("security", "getPermissionMethods", []);
         if (!result || !result.rows) {
           console.error("La consulta no devolvió resultados");
           return { sts: false, msg: "Error al obtener los metodos" };

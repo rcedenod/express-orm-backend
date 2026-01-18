@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 1.5rem; }
+        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        .link { text-align: center; margin-top: 15px; font-size: 14px; }
+        .error { color: red; text-align: center; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Bienvenido</h2>
+        <div id="errorMsg" class="error"></div>
+        <form id="loginForm">
+            <input type="email" id="email" placeholder="Correo electrónico" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <button type="submit">Ingresar</button>
+        </form>
+        <div class="link">
+            ¿No tienes cuenta? <a href="/register">Regístrate aquí</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMsg');
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+
+                if (data.sts) {
+                    // Si tienes un redirectUrl desde el back, úsalo, si no, ve al panel
+                    window.location.href = '/control-panel'; 
+                } else {
+                    errorDiv.textContent = data.msg || 'Error al iniciar sesión';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                errorDiv.textContent = 'Error de conexión';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

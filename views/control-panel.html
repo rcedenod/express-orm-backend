@@ -1,138 +1,260 @@
 <!DOCTYPE html>
-<html lang="es">
+<html class="dark" lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Backend Control Panel</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
-        .control-group { margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; }
-        select, button { padding: 8px; width: 100%; max-width: 300px; }
-        .permissions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 15px; }
-        .perm-card { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
-        .perm-card.active { background: #e3f2fd; border-color: #2196f3; }
-        .btn-save { background: #28a745; color: white; border: none; cursor: pointer; margin-top: 20px; font-size: 16px; }
-        .btn-save:hover { background: #218838; }
-    </style>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ORM Control Panel - Permissions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="./public/css/control-panel.css"></link>
 </head>
 <body>
 
-<div class="container">
-    <h1>🛠️ Panel de Control de Seguridad</h1>
-    
-    <div class="control-group">
-        <label>Seleccionar Perfil a Editar:</label>
-        <select id="profileSelect" onchange="loadPermissions()">
-            <option value="">Cargando perfiles...</option>
-        </select>
-    </div>
-
-    <div id="loading" style="display:none;">Cargando datos...</div>
-
-    <div id="permissionsContainer" style="display:none;">
-        <h3>Gestionar Permisos (Métodos)</h3>
-        <div class="permissions-grid" id="methodsGrid">
+<div class="flex h-screen">
+    <aside>
+        <div class="sidebar-header flex items-center gap-3">
+            <div class="icon-box">
+                <span class="material-symbols-outlined" style="color:white; font-size: 24px;">database</span>
             </div>
-        <button class="btn-save" onclick="saveChanges()">Guardar Cambios</button>
-    </div>
+            <div>
+                <h1 class="font-bold text-sm" style="line-height: 1.2;">ORM Control</h1>
+                <p class="text-xs text-muted uppercase tracking-wider">Admin Panel</p>
+            </div>
+        </div>
+        
+        <nav class="flex-col" style="padding: 1rem; overflow-y: auto;">
+            <div style="margin-bottom: 2rem;">
+                <p class="text-xs font-bold text-muted uppercase tracking-wider" style="padding: 0 0.75rem; margin-bottom: 0.5rem;">Core Access</p>
+                <a href="#" class="nav-link">
+                    <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 12px;">person</span>
+                    Users
+                </a>
+                <a href="#" class="nav-link">
+                    <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 12px;">badge</span>
+                    Profiles
+                </a>
+                <a href="#" class="nav-link active">
+                    <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 12px; font-variation-settings: 'FILL' 1;">key</span>
+                    Permissions
+                </a>
+            </div>
+        </nav>
+
+        <div style="padding: 1rem; border-top: 1px solid var(--border-dark); margin-top: auto;">
+            <a href="/login-view" class="nav-link">
+                <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 12px;">logout</span>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-col w-full" style="background-color: var(--bg-dark);">
+        
+        <header class="flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <h2 class="font-bold" style="font-size: 1.125rem;">Security & Permissions</h2>
+                <div class="flex items-center gap-2" style="padding: 4px 8px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 4px;">
+                    <div style="width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%;"></div>
+                    <span class="text-xs font-bold uppercase" style="color: #22c55e;">System Online</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div style="text-align: right;">
+                    <p class="text-xs font-bold">Administrator</p>
+                    <p class="text-xs text-muted">Super User</p>
+                </div>
+                <div style="width: 32px; height: 32px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <span class="material-symbols-outlined" style="font-size: 20px; color: #e2e8f0;">person</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="overflow-y-auto" style="flex: 1; padding: 2rem;">
+            
+            <div class="action-bar">
+                <div class="flex-col gap-2">
+                    <label for="profileSelect" class="text-xs font-bold text-muted uppercase tracking-wider">Select Profile to Edit</label>
+                    <div class="relative">
+                        <select id="profileSelect" onchange="loadPermissions()">
+                            <option value="">-- Cargar Perfiles --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="saveChanges()" class="btn btn-primary">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
+                    Save Changes
+                </button>
+            </div>
+
+            <div id="loading" class="hidden flex justify-center" style="padding: 3rem;">
+                <span class="material-symbols-outlined" style="font-size: 32px; color: var(--primary); animation: spin 1s linear infinite;">progress_activity</span>
+            </div>
+
+            <div id="emptyState" class="flex-col items-center justify-center" style="padding: 5rem 0; color: var(--text-muted); display: flex;">
+                <span class="material-symbols-outlined" style="font-size: 64px; opacity: 0.2; margin-bottom: 1rem;">touch_app</span>
+                <p class="text-sm font-bold">Selecciona un perfil arriba para comenzar</p>
+            </div>
+
+            <div id="permissionsContainer" class="hidden">
+                <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+                    <h3 class="text-sm font-bold">Available Methods</h3>
+                    <span class="text-xs text-muted" style="background: rgba(255,255,255,0.05); padding: 4px 8px; rounded: 4px;">Click cards to toggle</span>
+                </div>
+                
+                <div id="methodsGrid" class="permissions-grid">
+                    </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-dark);">
+                <div class="perm-card flex-col" style="cursor: default;">
+                    <p class="text-xs font-bold text-muted uppercase tracking-wider">Total Queries</p>
+                    <h3 class="font-bold" style="font-size: 1.5rem; margin-top: 0.5rem;">12.4k</h3>
+                    <div style="width: 100%; height: 4px; background: #1e293b; border-radius: 99px; margin-top: 1rem;">
+                        <div style="width: 65%; height: 100%; background: var(--primary); border-radius: 99px;"></div>
+                    </div>
+                </div>
+                </div>
+        </div>
+    </main>
 </div>
 
+<style>
+@keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+
 <script>
-    // URL de tu endpoint único
     const API_URL = '/ToProcess'; 
-    let currentPermissions = [];
     let allMethods = [];
 
-    // Función genérica para llamar a ToProcess
     async function callBackend(object, method, params = {}) {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ objectName: object, methodName: method, params: params })
-        });
-        return await response.json();
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ objectName: object, methodName: method, params: params })
+            });
+            return await response.json();
+        } catch(e) {
+            console.error("Connection Error:", e);
+            return { sts: false, msg: "Connection failed" };
+        }
     }
 
     async function init() {
-        // 1. Cargar Perfiles usando ProfileBO
         const res = await callBackend('ProfileBO', 'getProfiles');
+        const select = document.getElementById('profileSelect');
+        
         if(res.sts) {
-            const select = document.getElementById('profileSelect');
-            select.innerHTML = '<option value="">Seleccione un perfil</option>';
+            select.innerHTML = '<option value="">-- Select Profile --</option>';
             res.data.forEach(p => {
-                select.innerHTML += `<option value="${p.id_profile}">${p.profile}</option>`;
+                const opt = document.createElement('option');
+                opt.value = p.id_profile;
+                opt.textContent = p.profile; 
+                select.appendChild(opt);
             });
         }
         
-        // 2. Cargar Todos los Métodos Disponibles usando MethodBO
         const methodsRes = await callBackend('MethodBO', 'getMethods');
-        if(methodsRes.sts) allMethods = methodsRes.data;
+        if(methodsRes.sts) {
+            allMethods = methodsRes.data;
+        }
     }
 
     async function loadPermissions() {
         const profileId = document.getElementById('profileSelect').value;
-        if(!profileId) return;
+        const container = document.getElementById('permissionsContainer');
+        const grid = document.getElementById('methodsGrid');
+        const loading = document.getElementById('loading');
+        const empty = document.getElementById('emptyState');
 
-        // Obtener permisos actuales de la base de datos (Security.js o una query custom)
-        // Nota: Asumimos que tienes un método para listar permisos por perfil.
-        // Si no, usamos getPermissionMethods y filtramos en cliente (menos eficiente pero funciona para admin)
+        if(!profileId) {
+            container.classList.add('hidden');
+            empty.classList.remove('hidden');
+            return;
+        }
+
+        empty.classList.add('hidden');
+        loading.classList.remove('hidden');
+        container.classList.add('hidden');
+        grid.innerHTML = '';
+
         const permRes = await callBackend('MethodBO', 'getPermissionMethods');
         
-        const grid = document.getElementById('methodsGrid');
-        grid.innerHTML = '';
+        loading.classList.add('hidden');
+        container.classList.remove('hidden');
         
         if(permRes.sts) {
-            // Filtrar permisos solo para este perfil
             const activePerms = permRes.data.filter(p => p.fk_id_profile == profileId);
             const activeMethodIds = activePerms.map(p => p.fk_id_method);
 
             allMethods.forEach(method => {
                 const isActive = activeMethodIds.includes(method.id_method);
-                const div = document.createElement('div');
-                div.className = `perm-card ${isActive ? 'active' : ''}`;
-                div.innerHTML = `
-                    <label style="display:flex; align-items:center; cursor:pointer;">
-                        <input type="checkbox" 
-                               value="${method.id_method}" 
-                               ${isActive ? 'checked' : ''} 
-                               style="width:auto; margin-right:10px;">
-                        <div>
-                            <strong>${method.object}</strong><br>
-                            <small>${method.method}</small>
-                        </div>
-                    </label>
+                
+                const card = document.createElement('div');
+                // Usamos clases de nuestro CSS puro
+                card.className = `perm-card ${isActive ? 'active' : ''}`;
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = method.id_method;
+                checkbox.checked = isActive;
+                checkbox.className = 'custom-checkbox';
+                
+                card.onclick = (e) => {
+                    if(e.target !== checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                    }
+                    if(checkbox.checked) card.classList.add('active');
+                    else card.classList.remove('active');
+                };
+
+                const content = document.createElement('div');
+                content.innerHTML = `
+                    <label class="font-bold text-sm" style="display:block; cursor:pointer;">${method.object}</label>
+                    <p class="text-xs text-muted font-mono" style="margin-top:2px;">${method.method}</p>
                 `;
-                grid.appendChild(div);
+
+                card.appendChild(checkbox);
+                card.appendChild(content);
+                grid.appendChild(card);
             });
-            
-            document.getElementById('permissionsContainer').style.display = 'block';
         }
     }
 
     async function saveChanges() {
         const profileId = document.getElementById('profileSelect').value;
-        if(!profileId) return alert("Seleccione un perfil");
+        if(!profileId) return alert("Please select a profile first");
 
-        // Recolectar IDs seleccionados
+        const btn = document.querySelector('button[onclick="saveChanges()"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `Saving...`;
+
         const checkboxes = document.querySelectorAll('#methodsGrid input[type="checkbox"]');
-        const selectedMethods = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+        const selectedMethods = Array.from(checkboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
 
-        // Lógica simplificada: En un entorno real, calcularías el "delta" (qué borrar, qué agregar).
-        // Aquí podrías hacer un "bulk update" creando un método nuevo en MethodBO 
-        // o llamando a createPermissionMethod / deletePermissionMethods uno por uno.
-        
-        alert(`Lógica de guardado pendiente de implementar en MethodBO.\nSe intentará asignar ${selectedMethods.length} métodos al perfil ${profileId}.`);
-        
-        // Ejemplo de llamada para crear uno (iterar en un bucle o crear un endpoint masivo):
-        // await callBackend('MethodBO', 'createPermissionMethod', { 
-        //    fk_id_profile: profileId, fk_id_method: selectedMethods[0], ... 
-        // });
+        const res = await callBackend('MethodBO', 'syncPermissions', {
+            id_profile: profileId,
+            method_ids: selectedMethods
+        });
+
+        if(res.sts) {
+            btn.innerHTML = `Saved!`;
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
+        } else {
+            alert("Error: " + res.msg);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
     }
 
-    // Iniciar al cargar
-    init();
+    document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
