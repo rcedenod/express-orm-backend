@@ -2,7 +2,7 @@
 
 Monolito desacoplado desarrollado con fines educativos para entender y practicar ideas de ORM y capas de negocio similares a enfoques usados en ecosistemas como Prisma y TypeORM.
 
-El proyecto implementa un backend en Node.js + Express con un patrón de **despacho por un único endpoint** (`/ToProcess`) y un modelo de seguridad basado en:
+El proyecto implementa un backend en Node.js + Express con un patrón de **despacho por un único endpoint** (`/to-process`) y un modelo de seguridad basado en:
 
 - sesión por cookie (`express-session`)
 - perfiles/roles
@@ -25,7 +25,7 @@ Todo con una estructura simple de entender y extender.
 
 ### Núcleo del servidor
 
-- `Dispatcher.js`: arranque de Express, rutas HTTP, vistas y endpoint `ToProcess`.
+- `Dispatcher.js`: arranque de Express, rutas HTTP, vistas y endpoint `to-process`.
 - `Session.js`: manejo de autenticación y estado de sesión.
 - `Security.js`: carga/validación de permisos y ejecución dinámica de métodos de negocio.
 - `DataBase.js`: capa de consultas PostgreSQL usando `pg` y queries en JSON.
@@ -37,11 +37,12 @@ Carpeta `bo/`:
 - `UserBO.js`
 - `ProfileBO.js`
 - `MethodBO.js`
+- `ObjectBO.js`
 - `PersonBO.js`
 
-Cada BO contiene métodos de negocio que luego son invocados mediante `/ToProcess`.
+Cada BO contiene métodos de negocio que luego son invocados mediante `/to-process`.
 
-## Flujo de una solicitud (`/ToProcess`)
+## Flujo de una solicitud (`/to-process`)
 
 1. Cliente envía `objectName`, `methodName`, `params`.
 2. El servidor valida que exista sesión activa.
@@ -86,35 +87,53 @@ Este panel está orientado a gestionar:
 - objetos
 - métodos
 
-y consume el backend mediante llamadas a `/ToProcess`.
+y consume el backend mediante llamadas a `/to-process`.
+
+## Panel de control (estado actual)
+
+El panel administrativo incluye:
+
+- CRUD de usuarios
+- CRUD de perfiles
+- CRUD de objetos
+- CRUD de métodos
+- asignación de permisos por perfil
+- filtros por método y objeto en vistas de métodos y permisos
+- modal de feedback/confirmación (se reemplazaron `alert`/`confirm`)
+
+Reglas aplicadas:
+
+- solo perfil Admin puede abrir `/control-panel`
+- para perfiles no-admin, no se muestran métodos de objetos protegidos:
+  - `UserBO`, `PersonBO`, `ProfileBO`, `MethodBO`, `ObjectBO`
 
 ## Endpoints HTTP disponibles (estado actual)
 
 Autenticación y sesión:
 
 - `POST /login`
-- `POST /selectProfile`
+- `POST /select-profile`
 - `POST /logout`
-- `GET /checkSession`
-- `GET /menuOptions`
+- `GET /check-session`
+- `GET /menu-options`
 
 Registro y cuenta:
 
-- `POST /createUser`
-- `POST /resetPassword`
-- `POST /confirmResetPassword`
-- `POST /resetEmail`
+- `POST /create-user`
+- `POST /reset-password`
+- `POST /confirm-reset-password`
+- `POST /reset-email`
 
 Vistas:
 
 - `GET /` (redirige a login)
 - `GET /login-view`
-- `GET /register`
+- `GET /register` (deshabilitado: redirige a `/login-view`)
 - `GET /control-panel`
 
 Despacho ORM:
 
-- `POST /ToProcess`
+- `POST /to-process`
 
 ## Base de datos
 
@@ -165,7 +184,7 @@ Servidor por defecto:
 3. Registrar el objeto en tabla `security.object`.
 4. Registrar métodos en tabla `security.method` vinculados al objeto.
 5. Asignar permisos en `security.permission_method` a los perfiles necesarios.
-6. Consumir por `/ToProcess` enviando `objectName: "InvoiceBO"`.
+6. Consumir por `/to-process` enviando `objectName: "InvoiceBO"`.
 
 ## Estado del proyecto y consideraciones
 
@@ -198,8 +217,3 @@ express-orm-backend/
 ├─ Security.js
 └─ Session.js
 ```
-
----
-
-Si quieres, el siguiente paso natural es convertir este README en documentación técnica por módulos (API, permisos, BOs y modelo de datos) para soportar los cambios del `control-panel`.
-
