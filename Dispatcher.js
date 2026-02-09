@@ -35,16 +35,16 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       res.sendFile(path.join(__dirname, 'views', 'login.html'));
   });
 
-  // 2. Ruta para la pantalla de Registro
+  // Registro deshabilitado: redirigir siempre al login
   app.get('/register', (req, res) => {
-      res.sendFile(path.join(__dirname, 'views', 'register.html'));
+      return res.redirect('/login-view');
   });
 
   // Importar path al inicio del archivo si no está
   app.get('/control-panel', (req, res) => {
       // 1. Verificar si hay sesión
       if (!global.ss.sessionExist(req)) {
-          return res.status(401).send("Debes iniciar sesión primero.");
+          return res.redirect('/login-view');
       }
 
       // 2. Verificar si es ADMIN (Asumiendo que el ID 1 es Admin)
@@ -90,7 +90,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
 
     // Si solo tiene un perfil, iniciamos sesión directamente
     ss.createSession(req, profileResults.rows[0].fk_id_profile);
-    console.log(`El usuario ${req.body.userName} inició sesión con el perfil ${profileResults.rows[0].profile}`);
+    console.log(`El usuario ${req.body.email} inició sesión con el perfil ${profileResults.rows[0].profile}`);
 
     res.json({
         sts: true,
@@ -99,7 +99,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     });
   });
 
-  app.post('/selectProfile', async (req, res) => {
+  app.post('/select-profile', async (req, res) => {
 
     const { id_profile } = req.body;
     if (!id_profile) {
@@ -136,7 +136,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       }
   });
 
-  app.post('/createUser', async (req, res) => {
+  app.post('/create-user', async (req, res) => {
     try {
       // Extraer y validar los datos enviados
       const { name, last_name, birth_date, email, password, number_id } = req.body;
@@ -180,7 +180,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
   });
 
   // Endpoint: Enviar código de restablecimiento de contraseña
-  app.post('/resetPassword', async (req, res) => {
+  app.post('/reset-password', async (req, res) => {
     const emailRegex = /^\S+@\S+\.\S+$/; // Expresión regular para email
     const maxEmailLength = 50; // Límite de caracteres para el email
     try {
@@ -228,13 +228,13 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       await transporter.sendMail(mailOptions);
       res.json({ sts: true, msg: "Correo enviado con el código de restablecimiento." });
     } catch (error) {
-      console.error("Error en /resetPassword:", error);
+      console.error("Error en /reset-password:", error);
       res.status(500).json({ sts: false, msg: "Error al enviar el correo." });
     }
   });
 
   // Endpoint: Confirmar código y actualizar la contraseña
-  app.post('/confirmResetPassword', async (req, res) => {
+  app.post('/confirm-reset-password', async (req, res) => {
     try {
       const { code, newPassword } = req.body;
   
@@ -262,7 +262,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         res.status(500).json({ sts: false, msg: "No se pudo actualizar la contraseña." });
       }
     } catch (error) {
-      console.error("Error en /confirmResetPassword:", error);
+      console.error("Error en /confirm-reset-password:", error);
       res.status(500).json({ sts: false, msg: "Error al actualizar la contraseña." });
     }
   });
@@ -270,7 +270,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
 
   // Endpoint: Restablecer el email
   // Se requiere que se envíe la cédula (number_id), la contraseña actual y el nuevo email.
-  app.post('/resetEmail', async (req, res) => {
+  app.post('/reset-email', async (req, res) => {
     try {
       const { number_id, password, newEmail } = req.body;
       if (!number_id || !password || !newEmail) {
@@ -291,12 +291,12 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         res.status(500).json({ sts: false, msg: "No se pudo actualizar el email." });
       }
     } catch (error) {
-      console.error("Error en /resetEmail:", error);
+      console.error("Error en /reset-email:", error);
       res.status(500).json({ sts: false, msg: "Error al actualizar el email." });
     }
   });
 
-  app.get('/menuOptions', (req, res) => {
+  app.get('/menu-options', (req, res) => {
     // Verifica que la sesión exista y que el usuario esté autenticado
     if (!req.session || !req.session.profile) {
       return res.status(401).json({ sts: false, msg: "No autorizado" });
@@ -307,7 +307,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     res.json({ sts: true, options });
   });
 
-  app.get('/checkSession', (req, res) => {
+  app.get('/check-session', (req, res) => {
     if (ss.sessionExist(req)) {
       res.json({ authenticated: true });
     } else {
@@ -315,7 +315,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     }
   });
 
-  app.post('/ToProcess', async function (req, res) {
+  app.post('/to-process', async function (req, res) {
     if(ss.sessionExist(req)){
       if(sc.hasPermissionMethod({
         profile: req.session.profile,
@@ -336,5 +336,5 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
   });
 
   app.listen(port, () => {
-    console.log(`Servidor activo en el puerto ${port}`)
-  })
+    console.log(`Servidor activo en el puerto ${port}`);
+  });

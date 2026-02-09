@@ -1,260 +1,146 @@
+﻿
 <!DOCTYPE html>
 <html class="dark" lang="es">
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>ORM Control Panel - Permissions</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="./public/css/control-panel.css"></link>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel de control ORM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/public/css/control-panel.css"/>
 </head>
 <body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="icon-box"><span class="material-symbols-outlined">database</span></div>
+      <div>
+        <h1>ORM Control</h1>
+        <p>Administrador</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-link active" data-section="usuarios"><span class="material-symbols-outlined">person</span>Usuarios</a>
+      <a href="#" class="nav-link" data-section="perfiles"><span class="material-symbols-outlined">badge</span>Perfiles</a>
+      <a href="#" class="nav-link" data-section="objetos"><span class="material-symbols-outlined">deployed_code</span>Objetos</a>
+      <a href="#" class="nav-link" data-section="metodos"><span class="material-symbols-outlined">code</span>Metodos</a>
+      <a href="#" class="nav-link" data-section="permisos"><span class="material-symbols-outlined">key</span>Permisos</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" type="button" class="nav-link nav-button"><span class="material-symbols-outlined">logout</span>Cerrar sesion</button>
+    </div>
+  </aside>
 
-<div class="flex h-screen">
-    <aside>
-        <div class="sidebar-header flex items-center gap-3">
-            <div class="icon-box">
-                <span class="material-symbols-outlined" style="color:white; font-size: 24px;">database</span>
-            </div>
-            <div>
-                <h1 class="font-bold text-sm" style="line-height: 1.2;">ORM Control</h1>
-                <p class="text-xs text-muted uppercase tracking-wider">Admin Panel</p>
-            </div>
+  <main class="main-panel">
+    <header class="main-header">
+      <div>
+        <h2 id="mainTitle">Usuarios</h2>
+        <p id="mainSubtitle">Administra cuentas, perfiles y acceso</p>
+      </div>
+      <div class="status-chip"><span class="status-dot"></span><span>Sistema en linea</span></div>
+    </header>
+
+    <div class="panel-content">
+      <section id="sec-usuarios" class="module-section">
+        <div class="action-bar"><h3>Gestion de usuarios</h3><button class="btn" onclick="resetUserForm()">Limpiar</button></div>
+        <form id="userForm" class="form-grid" onsubmit="saveUser(event)">
+          <input type="hidden" id="user_id_user"/><input type="hidden" id="user_id_person"/>
+          <div class="field"><label>Nombre</label><input id="user_name" required/></div>
+          <div class="field"><label>Apellido</label><input id="user_last_name" required/></div>
+          <div class="field"><label>Fecha nacimiento</label><input id="user_birth_date" type="date" required/></div>
+          <div class="field"><label>Correo</label><input id="user_email" type="email" required/></div>
+          <div class="field"><label>Cedula/ID</label><input id="user_number_id" required/></div>
+          <div class="field"><label>Contrasena (solo crear)</label><input id="user_password" type="password"/></div>
+          <div class="field"><label>Perfiles</label><select id="user_profiles" class="compact-multi-select" multiple size="3"></select></div>
+          <div class="field field-full"><button id="userSubmitBtn" class="btn btn-primary" type="submit">Crear usuario</button></div>
+        </form>
+        <div class="table-wrap"><table class="table" id="usersTable"><thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>ID</th><th>Perfil</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+      </section>
+
+      <section id="sec-perfiles" class="module-section hidden">
+        <div class="action-bar"><h3>Gestion de perfiles</h3><button class="btn" onclick="resetProfileForm()">Limpiar</button></div>
+        <form id="profileForm" class="form-inline" onsubmit="saveProfile(event)"><input id="profile_id" type="hidden"/><input id="profile_name" placeholder="Nombre del perfil" required/><button id="profileSubmitBtn" class="btn btn-primary" type="submit">Crear perfil</button></form>
+        <div class="table-wrap"><table class="table" id="profilesTable"><thead><tr><th>ID</th><th>Perfil</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+      </section>
+
+      <section id="sec-objetos" class="module-section hidden">
+        <div class="action-bar"><h3>Gestion de objetos</h3><button class="btn" onclick="resetObjectForm()">Limpiar</button></div>
+        <form id="objectForm" class="form-inline" onsubmit="saveObject(event)"><input id="object_id" type="hidden"/><input id="object_name" placeholder="Nombre del objeto" required/><button id="objectSubmitBtn" class="btn btn-primary" type="submit">Crear objeto</button></form>
+        <div class="table-wrap"><table class="table" id="objectsTable"><thead><tr><th>ID</th><th>Objeto</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+      </section>
+
+      <section id="sec-metodos" class="module-section hidden">
+        <div class="action-bar"><h3>Gestion de metodos</h3><button class="btn" onclick="resetMethodForm()">Limpiar</button></div>
+        <form id="methodForm" class="form-inline" onsubmit="saveMethod(event)"><input id="method_id" type="hidden"/><input id="method_name" placeholder="Nombre del metodo" required/><select id="method_object_id" required></select><button id="methodSubmitBtn" class="btn btn-primary" type="submit">Crear metodo</button></form>
+        <div id="methodsFiltersContainer" class="action-bar filters-bar hidden">
+          <div class="filters-grid">
+            <div class="field no-margin">
+            <label for="methodsFilterMethodName">Filtrar por metodo</label>
+            <input id="methodsFilterMethodName" placeholder="Ej: getUsers" oninput="renderMethodsTable()"/>
+          </div>
+            <div class="field no-margin">
+            <label for="methodsFilterObjectName">Filtrar por objeto</label>
+            <select id="methodsFilterObjectName" onchange="renderMethodsTable()">
+              <option value="">Todos los objetos</option>
+            </select>
+          </div>
+          </div>
+          <div class="control-stack">
+            <span class="control-caption">Accion</span>
+            <button class="btn" type="button" onclick="clearMethodsFilters()">Limpiar filtros</button>
+          </div>
         </div>
-        
-        <nav class="flex-col" style="padding: 1rem; overflow-y: auto;">
-            <div style="margin-bottom: 2rem;">
-                <p class="text-xs font-bold text-muted uppercase tracking-wider" style="padding: 0 0.75rem; margin-bottom: 0.5rem;">Core Access</p>
-                <a href="#" class="nav-link">
-                    <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 12px;">person</span>
-                    Users
-                </a>
-                <a href="#" class="nav-link">
-                    <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 12px;">badge</span>
-                    Profiles
-                </a>
-                <a href="#" class="nav-link active">
-                    <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 12px; font-variation-settings: 'FILL' 1;">key</span>
-                    Permissions
-                </a>
-            </div>
-        </nav>
+        <div class="table-wrap"><table class="table" id="methodsTable"><thead><tr><th>ID</th><th>Metodo</th><th>Objeto</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+      </section>
 
-        <div style="padding: 1rem; border-top: 1px solid var(--border-dark); margin-top: auto;">
-            <a href="/login-view" class="nav-link">
-                <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 12px;">logout</span>
-                Logout
-            </a>
+      <section id="sec-permisos" class="module-section hidden">
+        <div class="action-bar">
+          <div class="field no-margin">
+            <label>Perfil a editar</label>
+            <select id="profileSelect" onchange="loadPermissions()"><option value="">Selecciona un perfil</option></select>
+          </div>
+          <div class="control-stack">
+            <span class="control-caption">Accion</span>
+            <button id="savePermissionsBtn" class="btn btn-primary" type="button" onclick="savePermissions()">Guardar permisos</button>
+          </div>
         </div>
-    </aside>
-
-    <main class="flex-col w-full" style="background-color: var(--bg-dark);">
-        
-        <header class="flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <h2 class="font-bold" style="font-size: 1.125rem;">Security & Permissions</h2>
-                <div class="flex items-center gap-2" style="padding: 4px 8px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 4px;">
-                    <div style="width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%;"></div>
-                    <span class="text-xs font-bold uppercase" style="color: #22c55e;">System Online</span>
-                </div>
+        <div id="emptyState" class="empty-state"><span class="material-symbols-outlined">touch_app</span><p id="emptyStateText">Selecciona un perfil para ver los permisos</p></div>
+        <div id="permissionsContainer" class="hidden">
+          <div id="permissionsFiltersContainer" class="action-bar filters-bar hidden">
+            <div class="filters-grid">
+              <div class="field no-margin">
+              <label for="permissionsFilterMethodName">Filtrar por metodo</label>
+              <input id="permissionsFilterMethodName" placeholder="Ej: getUsers" oninput="renderPermissionsGrid()"/>
             </div>
-            
-            <div class="flex items-center gap-4">
-                <div style="text-align: right;">
-                    <p class="text-xs font-bold">Administrator</p>
-                    <p class="text-xs text-muted">Super User</p>
-                </div>
-                <div style="width: 32px; height: 32px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                    <span class="material-symbols-outlined" style="font-size: 20px; color: #e2e8f0;">person</span>
-                </div>
+              <div class="field no-margin">
+              <label for="permissionsFilterObjectName">Filtrar por objeto</label>
+              <select id="permissionsFilterObjectName" onchange="renderPermissionsGrid()">
+                <option value="">Todos los objetos</option>
+              </select>
             </div>
-        </header>
-
-        <div class="overflow-y-auto" style="flex: 1; padding: 2rem;">
-            
-            <div class="action-bar">
-                <div class="flex-col gap-2">
-                    <label for="profileSelect" class="text-xs font-bold text-muted uppercase tracking-wider">Select Profile to Edit</label>
-                    <div class="relative">
-                        <select id="profileSelect" onchange="loadPermissions()">
-                            <option value="">-- Cargar Perfiles --</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button onclick="saveChanges()" class="btn btn-primary">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
-                    Save Changes
-                </button>
             </div>
-
-            <div id="loading" class="hidden flex justify-center" style="padding: 3rem;">
-                <span class="material-symbols-outlined" style="font-size: 32px; color: var(--primary); animation: spin 1s linear infinite;">progress_activity</span>
+            <div class="control-stack">
+              <span class="control-caption">Accion</span>
+              <button class="btn" type="button" onclick="clearPermissionsFilters()">Limpiar filtros</button>
             </div>
-
-            <div id="emptyState" class="flex-col items-center justify-center" style="padding: 5rem 0; color: var(--text-muted); display: flex;">
-                <span class="material-symbols-outlined" style="font-size: 64px; opacity: 0.2; margin-bottom: 1rem;">touch_app</span>
-                <p class="text-sm font-bold">Selecciona un perfil arriba para comenzar</p>
-            </div>
-
-            <div id="permissionsContainer" class="hidden">
-                <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
-                    <h3 class="text-sm font-bold">Available Methods</h3>
-                    <span class="text-xs text-muted" style="background: rgba(255,255,255,0.05); padding: 4px 8px; rounded: 4px;">Click cards to toggle</span>
-                </div>
-                
-                <div id="methodsGrid" class="permissions-grid">
-                    </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-dark);">
-                <div class="perm-card flex-col" style="cursor: default;">
-                    <p class="text-xs font-bold text-muted uppercase tracking-wider">Total Queries</p>
-                    <h3 class="font-bold" style="font-size: 1.5rem; margin-top: 0.5rem;">12.4k</h3>
-                    <div style="width: 100%; height: 4px; background: #1e293b; border-radius: 99px; margin-top: 1rem;">
-                        <div style="width: 65%; height: 100%; background: var(--primary); border-radius: 99px;"></div>
-                    </div>
-                </div>
-                </div>
+          </div>
+          <div id="permissionsTitleContainer" class="perm-head hidden"><h3>Metodos disponibles</h3><span>Selecciona metodos permitidos</span></div>
+          <div id="methodsGrid" class="permissions-grid"></div>
         </div>
-    </main>
+      </section>
+    </div>
+  </main>
 </div>
-
-<style>
-@keyframes spin { 100% { transform: rotate(360deg); } }
-</style>
-
-<script>
-    const API_URL = '/ToProcess'; 
-    let allMethods = [];
-
-    async function callBackend(object, method, params = {}) {
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ objectName: object, methodName: method, params: params })
-            });
-            return await response.json();
-        } catch(e) {
-            console.error("Connection Error:", e);
-            return { sts: false, msg: "Connection failed" };
-        }
-    }
-
-    async function init() {
-        const res = await callBackend('ProfileBO', 'getProfiles');
-        const select = document.getElementById('profileSelect');
-        
-        if(res.sts) {
-            select.innerHTML = '<option value="">-- Select Profile --</option>';
-            res.data.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.id_profile;
-                opt.textContent = p.profile; 
-                select.appendChild(opt);
-            });
-        }
-        
-        const methodsRes = await callBackend('MethodBO', 'getMethods');
-        if(methodsRes.sts) {
-            allMethods = methodsRes.data;
-        }
-    }
-
-    async function loadPermissions() {
-        const profileId = document.getElementById('profileSelect').value;
-        const container = document.getElementById('permissionsContainer');
-        const grid = document.getElementById('methodsGrid');
-        const loading = document.getElementById('loading');
-        const empty = document.getElementById('emptyState');
-
-        if(!profileId) {
-            container.classList.add('hidden');
-            empty.classList.remove('hidden');
-            return;
-        }
-
-        empty.classList.add('hidden');
-        loading.classList.remove('hidden');
-        container.classList.add('hidden');
-        grid.innerHTML = '';
-
-        const permRes = await callBackend('MethodBO', 'getPermissionMethods');
-        
-        loading.classList.add('hidden');
-        container.classList.remove('hidden');
-        
-        if(permRes.sts) {
-            const activePerms = permRes.data.filter(p => p.fk_id_profile == profileId);
-            const activeMethodIds = activePerms.map(p => p.fk_id_method);
-
-            allMethods.forEach(method => {
-                const isActive = activeMethodIds.includes(method.id_method);
-                
-                const card = document.createElement('div');
-                // Usamos clases de nuestro CSS puro
-                card.className = `perm-card ${isActive ? 'active' : ''}`;
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = method.id_method;
-                checkbox.checked = isActive;
-                checkbox.className = 'custom-checkbox';
-                
-                card.onclick = (e) => {
-                    if(e.target !== checkbox) {
-                        checkbox.checked = !checkbox.checked;
-                    }
-                    if(checkbox.checked) card.classList.add('active');
-                    else card.classList.remove('active');
-                };
-
-                const content = document.createElement('div');
-                content.innerHTML = `
-                    <label class="font-bold text-sm" style="display:block; cursor:pointer;">${method.object}</label>
-                    <p class="text-xs text-muted font-mono" style="margin-top:2px;">${method.method}</p>
-                `;
-
-                card.appendChild(checkbox);
-                card.appendChild(content);
-                grid.appendChild(card);
-            });
-        }
-    }
-
-    async function saveChanges() {
-        const profileId = document.getElementById('profileSelect').value;
-        if(!profileId) return alert("Please select a profile first");
-
-        const btn = document.querySelector('button[onclick="saveChanges()"]');
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = `Saving...`;
-
-        const checkboxes = document.querySelectorAll('#methodsGrid input[type="checkbox"]');
-        const selectedMethods = Array.from(checkboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
-
-        const res = await callBackend('MethodBO', 'syncPermissions', {
-            id_profile: profileId,
-            method_ids: selectedMethods
-        });
-
-        if(res.sts) {
-            btn.innerHTML = `Saved!`;
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }, 2000);
-        } else {
-            alert("Error: " + res.msg);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', init);
-</script>
+<div id="feedbackModal" class="feedback-modal hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+  <div class="feedback-card">
+    <h3 id="feedbackTitle">Mensaje</h3>
+    <p id="feedbackMessage"></p>
+    <div class="feedback-actions">
+      <button id="feedbackCancelBtn" type="button" class="btn hidden">Cancelar</button>
+      <button id="feedbackConfirmBtn" type="button" class="btn btn-primary">Aceptar</button>
+    </div>
+  </div>
+</div>
+<script src="/public/js/control-panel.js"></script>
 </body>
 </html>
