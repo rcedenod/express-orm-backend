@@ -1,21 +1,64 @@
 {
-  "name": "express-orm-backend",
+  "name": "grap-orm",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "Dispatcher.js",
+  "bin": {
+    "grap-orm": "bin/cli.js"
+  },
   "scripts": {
+    "start": "node Dispatcher.js",
+    "init": "node bin/cli.js init",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "files": [
+    "Dispatcher.js",
+    "DataBase.js",
+    "Security.js",
+    "Session.js",
+    "bo",
+    "configs/queries.json",
+    "configs/sessionconfig.json",
+    "configs/connections.template.json",
+    "configs/appconfig.json",
+    "views",
+    "public",
+    "tailwind/styles.css",
+    "backup",
+    "bin",
+    ".env.example"
+  ],
+  "keywords": [
+    "express",
+    "orm",
+    "education",
+    "postgres",
+    "backend"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "GrapORM: backend ORM educativo con panel de control y despacho por endpoint unico.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rcedenod/grap-orm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rcedenod/grap-orm/issues"
+  },
+  "homepage": "https://github.com/rcedenod/grap-orm#readme",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "nodemailer": "^7.0.12",
     "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "tailwindcss": "^4.1.18"
   }
 }

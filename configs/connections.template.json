@@ -1,0 +1,11 @@
+﻿{
+  "config": [
+    {
+      "host": "localhost",
+      "database": "orm-db",
+      "user": "postgres",
+      "password": "",
+      "port": 5432
+    }
+  ]
+}

@@ -1,6 +1,8 @@
+// userbo: crud de usuarios y perfiles
 const UserBO = class {
     constructor() {}
   
+    // lista usuarios con datos asociados
     async getUsers(params) {
       try {
         const result = await database.executeQuery("security", "getUsers", []);
@@ -24,16 +26,17 @@ const UserBO = class {
     }
   
 
+    // crea usuario y asigna perfiles
     async createUser(params) {
       try {
-        // Validar que existan todos los datos obligatorios
+        // valida datos obligatorios
         const { name, lastName, birthDate, email, password, numberId, id_profile } = params;
         
         if (!name || !lastName || !birthDate || !email || !password || !numberId || !id_profile) {
           return { sts: false, msg: "Faltan datos obligatorios" };
         }
         
-        // Insertar la persona en la tabla public.person
+        // crea persona base
         const personResult = await database.executeQuery("public", "createPerson", [
           name,
           lastName,
@@ -44,11 +47,11 @@ const UserBO = class {
           return { sts: false, msg: "No se pudo crear la persona" };
         }
         
-        // Obtener el id_person generado
+        // usa el id_person para enlazar usuario
         const id_person = personResult.rows[0].id_person;
         console.log(`Persona creada con id_person: ${id_person}`);
         
-        // Insertar el usuario en la tabla security.user
+        // crea usuario en security.user
         const userResult = await database.executeQuery("security", "createUser", [
           email,
           password,
@@ -59,10 +62,10 @@ const UserBO = class {
           return { sts: false, msg: "No se pudo crear el usuario" };
         }
   
-        // Obtener el id del usuario recién creado
+        // obtiene el id del usuario creado
         const id_user = userResult.rows[0].id_user;
-  
-        // Insertar en la tabla user_profile para asignar los perfiles al usuario
+
+        // asigna perfiles al usuario
         let allInserted = true;
         for (let profileId of id_profile) {
           const userProfileResult = await database.executeQuery("security", "createUserProfile", [
@@ -86,17 +89,17 @@ const UserBO = class {
       }
     }
   
+    // actualiza usuario y sus perfiles
     async updateUser(params) {
       try {
-        // Se espera recibir los siguientes parámetros: 
-        // id_user, id_person, name, lastName, birthDate, email, numberId y profile (arreglo de id_profile)
+        // parametros esperados: id_user, id_person, name, lastname, birthdate, email, numberid, profile[]
         const { id_user, id_person, name, lastName, birthDate, email, numberId, profile } = params;
         if (!id_user || !id_person || !name || !lastName || !birthDate || !email || !numberId || !profile) {
-          console.log("params: ", params);
+          console.log("Params: ", params);
           return { sts: false, msg: "Faltan datos obligatorios" };
         }
         
-        // Actualizar la persona en la tabla public.person
+        // actualiza persona
         const personResult = await database.executeQuery("public", "updatePerson", [
           name,
           lastName,
@@ -108,7 +111,7 @@ const UserBO = class {
           return { sts: false, msg: "No se pudo actualizar la persona" };
         }
     
-        // Actualizar el usuario en la tabla security.user
+        // actualiza usuario
         const userResult = await database.executeQuery("security", "updateUser", [
           email,
           numberId,
@@ -119,11 +122,10 @@ const UserBO = class {
           return { sts: false, msg: "No se pudo actualizar el usuario" };
         }
     
-        // Eliminar las relaciones actuales en la tabla security.user_profile
-        // Se envía el id_user dentro de un array para que se interprete como un arreglo literal
+        // limpia perfiles anteriores
         await database.executeQuery("security", "deleteUserProfileByUserId", [[id_user]]);
     
-        // Insertar las nuevas relaciones para cada perfil
+        // asigna perfiles nuevos
         let allInserted = true;
         for (let profileId of profile) {
           const userProfileResult = await database.executeQuery("security", "createUserProfile", [
@@ -146,13 +148,14 @@ const UserBO = class {
       }
     }    
   
+    // elimina usuarios y personas asociadas
     async deleteUsers(params) {
       try {
         if (!params.ids || !Array.isArray(params.ids) || params.ids.length === 0) {
           return { sts: false, msg: "Faltan datos obligatorios" };
         }
     
-        // Obtener todos los id_person asociados a los id_user proporcionados
+        // obtiene id_person para limpiar datos
         const userInfoResult = await database.executeQuery("security", "getUserById", [params.ids]);
     
         if (!userInfoResult || !userInfoResult.rows || userInfoResult.rows.length === 0) {
@@ -161,7 +164,7 @@ const UserBO = class {
     
         const idPersons = userInfoResult.rows.map(user => parseInt(user.fk_id_person));
     
-        // Eliminar relaciones y usuarios en un solo paso
+        // elimina relaciones y usuarios
         await database.executeQuery("security", "deleteUserProfileByUserId", [params.ids]);
         await database.executeQuery("security", "deleteUser", [params.ids]);
         await database.executeQuery("public", "deletePerson", [idPersons]);

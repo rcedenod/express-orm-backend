@@ -1,8 +1,10 @@
+// methodbo: crud de metodos y permisos
 const PROTECTED_DEFAULT_OBJECTS = new Set(['userbo', 'personbo', 'profilebo', 'methodbo', 'objectbo']);
 
 const MethodBO = class {
   constructor() {}
 
+  // valida si un objeto es protegido
   isProtectedObjectName(objectName) {
     if (!objectName) return false;
     if (global.sc && typeof global.sc.isProtectedBusinessObject === 'function') {
@@ -11,12 +13,14 @@ const MethodBO = class {
     return PROTECTED_DEFAULT_OBJECTS.has(String(objectName).toLowerCase());
   }
 
+  // busca un metodo por id para validaciones
   async getMethodById(idMethod) {
     const methodsResult = await database.executeQuery('security', 'getMethods', []);
     if (!methodsResult || !methodsResult.rows) return null;
     return methodsResult.rows.find((row) => Number(row.id_method) === Number(idMethod)) || null;
   }
 
+  // lista metodos disponibles
   async getMethods(params) {
     try {
       const result = await database.executeQuery('security', 'getMethods', []);
@@ -32,6 +36,7 @@ const MethodBO = class {
     }
   }
 
+  // crea un metodo en security.method
   async createMethod(params) {
     try {
       const { name, id_object } = params;
@@ -52,6 +57,7 @@ const MethodBO = class {
     }
   }
 
+  // actualiza un metodo en security.method
   async updateMethod(params) {
     try {
       const { id_method, method, fk_id_object } = params;
@@ -77,6 +83,7 @@ const MethodBO = class {
     }
   }
 
+  // elimina metodos y limpia permisos
   async deleteMethods(params) {
     try {
       const { ids } = params;
@@ -100,6 +107,7 @@ const MethodBO = class {
     }
   }
 
+  // lista permisos de metodos por perfil
   async getPermissionMethods(params) {
     try {
       const result = await database.executeQuery('security', 'getPermissionMethods', []);
@@ -115,6 +123,7 @@ const MethodBO = class {
     }
   }
 
+  // crea permiso de metodo para un perfil
   async createPermissionMethod(params) {
     try {
       const { fk_id_profile, fk_id_method, method, object } = params;
@@ -153,6 +162,7 @@ const MethodBO = class {
     }
   }
 
+  // actualiza permiso de metodo
   async updatePermissionMethod(params) {
     try {
       const { id_permission_method, fk_id_profile, fk_id_method, old_fk_id_profile, method, object } = params;
@@ -191,6 +201,7 @@ const MethodBO = class {
     }
   }
 
+  // elimina permisos seleccionados
   async deletePermissionMethods(params) {
     try {
       const { permissions } = params;
@@ -231,6 +242,7 @@ const MethodBO = class {
     }
   }
 
+  // sincroniza permisos para un perfil
   async syncPermissions(params) {
     const { id_profile, method_ids } = params;
     const profileId = Number(id_profile);

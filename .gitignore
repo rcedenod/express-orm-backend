@@ -1,0 +1,32 @@
+﻿# Dependencias
+node_modules/
+
+# Logs de npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Variables de entorno (no subir claves)
+.env
+.env.*
+.npmrc
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Carpetas de IDEs
+.vscode/
+.idea/
+
+# Archivos de build y caches
+dist/
+build/
+.cache/
+.parcel-cache/
+coverage/
+*.tgz
+
+# Archivos locales del proyecto
+configs/connections.json

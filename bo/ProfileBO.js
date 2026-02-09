@@ -1,6 +1,8 @@
-﻿const ProfileBO = class {
+// profilebo: crud de perfiles
+const ProfileBO = class {
   constructor() {}
 
+  // lista perfiles disponibles
   async getProfiles(params) {
     try {
       const result = await database.executeQuery('security', 'getProfiles', []);
@@ -17,6 +19,7 @@
     }
   }
 
+  // crea un perfil nuevo
   async createProfile(params) {
     try {
       const result = await database.executeQuery('security', 'createProfile', [params.profileName]);
@@ -30,6 +33,7 @@
     }
   }
 
+  // actualiza un perfil existente
   async updateProfile(params) {
     try {
       const result = await database.executeQuery('security', 'updateProfile', [params.profileName, params.id_profile]);
@@ -43,13 +47,14 @@
     }
   }
 
+  // elimina perfiles y limpia relaciones
   async deleteProfiles(params) {
     try {
       if (!params.ids || !Array.isArray(params.ids) || params.ids.length === 0) {
         return { sts: false, msg: 'Faltan datos obligatorios' };
       }
 
-      // Limpiar relaciones para evitar errores de llave foranea al borrar perfiles.
+      // limpiar relaciones para evitar errores de llave foranea al borrar perfiles.
       await database.executeQuery('security', 'deletePermissionMethodsByProfiles', [params.ids]);
       await database.executeQuery('security', 'deletePermissionMenusByProfiles', [params.ids]);
       await database.executeQuery('security', 'deleteUserProfilesByProfiles', [params.ids]);

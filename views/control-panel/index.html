@@ -1,0 +1,281 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GrapORM</title>
+  <link rel="stylesheet" href="/tailwind/styles.css" />
+</head>
+<body class="h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans">
+<div class="flex h-screen">
+  <aside class="w-64 shrink-0 border-r border-slate-200 bg-white flex flex-col">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-slate-200">
+      <div class="h-10 w-10 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-lg shadow-red-200">
+        <svg class="h-5 w-5" aria-hidden="true">
+          <use href="/icons/sprite.svg#database"></use>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-sm font-bold">GrapORM</h1>
+        <p class="text-[10px] uppercase tracking-[0.18em] text-slate-400">Administrador</p>
+      </div>
+    </div>
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" id="sidebarNav">
+      <a href="#" class="nav-link flex items-center gap-2 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100" data-section="usuarios">
+        <svg class="h-4 w-4 text-slate-600" aria-hidden="true">
+          <use href="/icons/sprite.svg#person"></use>
+        </svg>Usuarios
+      </a>
+      <a href="#" class="nav-link flex items-center gap-2 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100" data-section="perfiles">
+        <svg class="h-4 w-4 text-slate-600" aria-hidden="true">
+          <use href="/icons/sprite.svg#badge"></use>
+        </svg>Perfiles
+      </a>
+      <a href="#" class="nav-link flex items-center gap-2 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100" data-section="objetos">
+        <svg class="h-4 w-4 text-slate-600" aria-hidden="true">
+          <use href="/icons/sprite.svg#deployed_code"></use>
+        </svg>Objetos
+      </a>
+      <a href="#" class="nav-link flex items-center gap-2 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100" data-section="metodos">
+        <svg class="h-4 w-4 text-slate-600" aria-hidden="true">
+          <use href="/icons/sprite.svg#code"></use>
+        </svg>Metodos
+      </a>
+      <a href="#" class="nav-link flex items-center gap-2 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100" data-section="permisos">
+        <svg class="h-4 w-4 text-slate-600" aria-hidden="true">
+          <use href="/icons/sprite.svg#key"></use>
+        </svg>Permisos
+      </a>
+    </nav>
+    <div class="border-t border-slate-200 px-4 py-3">
+      <button id="logoutBtn" type="button" class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+        <svg class="h-4 w-4 text-slate-600" aria-hidden="true">
+          <use href="/icons/sprite.svg#logout"></use>
+        </svg>Cerrar sesion
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 min-w-0 flex flex-col">
+    <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+      <div>
+        <h2 id="mainTitle" class="text-2xl font-bold">Usuarios</h2>
+        <p id="mainSubtitle" class="text-xs text-slate-500">Administra cuentas, perfiles y acceso</p>
+      </div>
+      <div class="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase text-emerald-600">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+        Sistema en linea
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      <section id="sec-usuarios" class="space-y-4">
+        <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <h3 class="text-sm font-semibold">Gestion de usuarios</h3>
+          <button class="btn-base" onclick="resetUserForm()">Limpiar</button>
+        </div>
+        <form id="userForm" class="grid grid-cols-1 lg:grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4" onsubmit="saveUser(event)">
+          <input type="hidden" id="user_id_user"/>
+          <input type="hidden" id="user_id_person"/>
+          <div class="space-y-1">
+            <label class="text-xs text-slate-500">Nombre</label>
+            <input id="user_name" required class="input-base" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-slate-500">Apellido</label>
+            <input id="user_last_name" required class="input-base" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-slate-500">Fecha nacimiento</label>
+            <input id="user_birth_date" type="date" required class="input-base" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-slate-500">Correo</label>
+            <input id="user_email" type="email" required class="input-base" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-slate-500">Cedula/ID</label>
+            <input id="user_number_id" required class="input-base" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-slate-500">Contrasena (solo crear)</label>
+            <input id="user_password" type="password" class="input-base" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-slate-500">Perfiles</label>
+            <select id="user_profiles" class="input-base min-h-[96px]" multiple size="3"></select>
+          </div>
+          <div class="lg:col-span-2">
+            <button id="userSubmitBtn" class="btn-primary w-full" type="submit">Crear usuario</button>
+          </div>
+        </form>
+        <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <table class="min-w-full text-left text-sm" id="usersTable">
+            <thead class="bg-slate-50 text-[11px] uppercase tracking-[0.14em] text-slate-500">
+              <tr>
+                <th class="px-4 py-3">ID</th>
+                <th class="px-4 py-3">Nombre</th>
+                <th class="px-4 py-3">Correo</th>
+                <th class="px-4 py-3">ID</th>
+                <th class="px-4 py-3">Perfil</th>
+                <th class="px-4 py-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sec-perfiles" class="space-y-4 hidden">
+        <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <h3 class="text-sm font-semibold">Gestion de perfiles</h3>
+          <button class="btn-base" onclick="resetProfileForm()">Limpiar</button>
+        </div>
+        <form id="profileForm" class="grid grid-cols-1 lg:grid-cols-[1fr_1fr_auto] gap-3 rounded-xl border border-slate-200 bg-white p-4" onsubmit="saveProfile(event)">
+          <input id="profile_id" type="hidden"/>
+          <input id="profile_name" placeholder="Nombre del perfil" required class="input-base" />
+          <div></div>
+          <button id="profileSubmitBtn" class="btn-primary" type="submit">Crear perfil</button>
+        </form>
+        <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <table class="min-w-full text-left text-sm" id="profilesTable">
+            <thead class="bg-slate-50 text-[11px] uppercase tracking-[0.14em] text-slate-500">
+              <tr><th class="px-4 py-3">ID</th><th class="px-4 py-3">Perfil</th><th class="px-4 py-3">Acciones</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sec-objetos" class="space-y-4 hidden">
+        <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <h3 class="text-sm font-semibold">Gestion de objetos</h3>
+          <button class="btn-base" onclick="resetObjectForm()">Limpiar</button>
+        </div>
+        <form id="objectForm" class="grid grid-cols-1 lg:grid-cols-[1fr_1fr_auto] gap-3 rounded-xl border border-slate-200 bg-white p-4" onsubmit="saveObject(event)">
+          <input id="object_id" type="hidden"/>
+          <input id="object_name" placeholder="Nombre del objeto" required class="input-base" />
+          <div></div>
+          <button id="objectSubmitBtn" class="btn-primary" type="submit">Crear objeto</button>
+        </form>
+        <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <table class="min-w-full text-left text-sm" id="objectsTable">
+            <thead class="bg-slate-50 text-[11px] uppercase tracking-[0.14em] text-slate-500">
+              <tr><th class="px-4 py-3">ID</th><th class="px-4 py-3">Objeto</th><th class="px-4 py-3">Acciones</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sec-metodos" class="space-y-4 hidden">
+        <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <h3 class="text-sm font-semibold">Gestion de metodos</h3>
+          <button class="btn-base" onclick="resetMethodForm()">Limpiar</button>
+        </div>
+        <form id="methodForm" class="grid grid-cols-1 lg:grid-cols-[1fr_1fr_auto] gap-3 rounded-xl border border-slate-200 bg-white p-4" onsubmit="saveMethod(event)">
+          <input id="method_id" type="hidden"/>
+          <input id="method_name" placeholder="Nombre del metodo" required class="input-base" />
+          <select id="method_object_id" required class="input-base"></select>
+          <button id="methodSubmitBtn" class="btn-primary" type="submit">Crear metodo</button>
+        </form>
+        <div id="methodsFiltersContainer" class="hidden rounded-xl border border-slate-200 bg-white p-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label for="methodsFilterMethodName" class="text-xs text-slate-500">Filtrar por metodo</label>
+              <input id="methodsFilterMethodName" placeholder="Ej: getUsers" oninput="renderMethodsTable()" class="input-base" />
+            </div>
+            <div class="space-y-1">
+              <label for="methodsFilterObjectName" class="text-xs text-slate-500">Filtrar por objeto</label>
+              <select id="methodsFilterObjectName" onchange="renderMethodsTable()" class="input-base">
+                <option value="">Todos los objetos</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-3 flex items-end justify-end">
+            <button class="btn-base" type="button" onclick="clearMethodsFilters()">Limpiar filtros</button>
+          </div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <table class="min-w-full text-left text-sm" id="methodsTable">
+            <thead class="bg-slate-50 text-[11px] uppercase tracking-[0.14em] text-slate-500">
+              <tr><th class="px-4 py-3">ID</th><th class="px-4 py-3">Metodo</th><th class="px-4 py-3">Objeto</th><th class="px-4 py-3">Acciones</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sec-permisos" class="space-y-4 hidden">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <div class="space-y-1">
+            <label class="text-xs text-slate-500">Perfil a editar</label>
+            <select id="profileSelect" onchange="loadPermissions()" class="input-base">
+              <option value="">Selecciona un perfil</option>
+            </select>
+          </div>
+          <div class="flex flex-col items-start">
+            <span class="text-xs text-slate-500">Accion</span>
+            <button id="savePermissionsBtn" class="btn-primary" type="button" onclick="savePermissions()">Guardar permisos</button>
+          </div>
+        </div>
+        <div id="emptyState" class="min-h-[55vh] rounded-xl border border-dashed border-slate-200 bg-white flex flex-col items-center justify-center gap-3 text-slate-500">
+          <svg class="h-8 w-8 text-red-600" aria-hidden="true">
+            <use href="/icons/sprite.svg#touch_app"></use>
+          </svg>
+          <p id="emptyStateText">Selecciona un perfil para ver los permisos</p>
+        </div>
+        <div id="permissionsContainer" class="hidden space-y-4">
+          <div id="permissionsFiltersContainer" class="hidden rounded-xl border border-slate-200 bg-white p-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label for="permissionsFilterMethodName" class="text-xs text-slate-500">Filtrar por metodo</label>
+                <input id="permissionsFilterMethodName" placeholder="Ej: getUsers" oninput="renderPermissionsGrid()" class="input-base" />
+              </div>
+              <div class="space-y-1">
+                <label for="permissionsFilterObjectName" class="text-xs text-slate-500">Filtrar por objeto</label>
+                <select id="permissionsFilterObjectName" onchange="renderPermissionsGrid()" class="input-base">
+                  <option value="">Todos los objetos</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-3 flex items-end justify-end">
+              <button class="btn-base" type="button" onclick="clearPermissionsFilters()">Limpiar filtros</button>
+            </div>
+          </div>
+          <div id="permissionsTitleContainer" class="hidden flex items-center justify-between">
+            <h3 class="text-sm font-semibold">Metodos disponibles</h3>
+            <span class="text-xs text-slate-500">Selecciona metodos permitidos</span>
+          </div>
+          <div id="methodsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div id="feedbackModal" class="hidden fixed inset-0 z-50 bg-slate-900/30 flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+  <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
+    <h3 id="feedbackTitle" class="text-lg font-semibold">Mensaje</h3>
+    <p id="feedbackMessage" class="mt-2 text-sm text-slate-500"></p>
+    <div class="mt-4 flex justify-end gap-2">
+      <button id="feedbackCancelBtn" type="button" class="btn-base hidden">Cancelar</button>
+      <button id="feedbackConfirmBtn" type="button" class="btn-primary">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const baseButton = 'inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition';
+  const primaryButton = 'inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700 transition';
+  const dangerButton = 'inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition';
+  const actionButton = 'text-xs px-2.5 py-1.5';
+  document.querySelectorAll('.btn-base').forEach((btn) => btn.className = baseButton + ' ' + btn.className);
+  document.querySelectorAll('.btn-primary').forEach((btn) => btn.className = primaryButton + ' ' + btn.className);
+  document.querySelectorAll('.btn-danger').forEach((btn) => btn.className = dangerButton + ' ' + btn.className);
+  document.querySelectorAll('.btn-action').forEach((btn) => btn.className = actionButton + ' ' + btn.className);
+  document.querySelectorAll('.input-base').forEach((input) => input.className = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition');
+</script>
+<script src="/views/control-panel/control-panel.js"></script>
+</body>
+</html>

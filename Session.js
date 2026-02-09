@@ -1,14 +1,15 @@
+// session: autenticacion y ciclo de sesion
 const fs = require('fs');
 const path = require('path');
 const session = require('express-session');
 
 const Session = class {
     constructor(app) {
-        // Leer el archivo JSON de configuración
+        // lee config y aplica express-session
         const configPath = path.join(__dirname, 'configs/sessionconfig.json');        
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-        // Configurar express-session con los valores del JSON
+        // configura express-session con valores del json
         app.use(session({
             secret: config.secret,
             resave: config.resave,
@@ -23,11 +24,11 @@ const Session = class {
             next();
         });
 
-        // Inicializar el objeto de sesión con los valores del JSON
+        // inicializa sessionobject con valores del json
         this.sessionObject = config.sessionObject;
     }
 
-    //Verificar que la sesion exista
+    // verifica si hay sesion activa
     sessionExist(req){
         if(req.session && req.session.userName){
             return true;
@@ -36,7 +37,7 @@ const Session = class {
     }
     
 
-    //Autenticacion de usuario
+    // autentica usuario contra la base
     async authenticateUser(req) {
         try {
             let response = await database.executeQuery("public", "getUser", [req.body.email]);
@@ -62,7 +63,7 @@ const Session = class {
         }
     }
 
-    //Crear la sesion
+    // crea sesion en req.session
     createSession(req, id_profile) {
         try {
             if (this.sessionObject.status) {
@@ -79,7 +80,7 @@ const Session = class {
         }
     }    
 
-    // Cerrar la sesión usando promesas y reiniciando sessionObject
+    // cierra sesion y limpia sessionobject
     closeSession(req) {
         return new Promise((resolve, reject) => {
             req.session.destroy((err) => {
@@ -87,7 +88,7 @@ const Session = class {
                     console.log("Error al cerrar la sesión:", err);
                     reject(err);
                 } else {
-                    // Reinicia el objeto sessionObject para que no retenga datos del usuario
+                    // reinicia el objeto sessionobject para que no retenga datos del usuario
                     this.sessionObject = {
                         userId: '',
                         userName: '',

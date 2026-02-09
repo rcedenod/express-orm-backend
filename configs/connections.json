@@ -1,8 +1,0 @@
-{
-    "config" : [{
-        "database": "orm-db",
-        "user": "postgres",
-        "password": "1597",
-        "port": 5432
-    }]
-}

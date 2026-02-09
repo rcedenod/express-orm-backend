@@ -1,6 +1,8 @@
+// dispatcher: rutas http y bootstrap del servidor
 const express = require('express');
 let fs = require("fs");
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 const app = express();
 const cors = require('cors');
@@ -9,54 +11,75 @@ const { profile } = require('console');
 const path = require('path');
 const port = 3000;
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
-}));
-app.use(express.json()); // Esto asegura que req.body sea parseado correctamente
-app.use('/public', express.static(path.join(__dirname, 'public')));
+// carga configuracion general (cors, etc.)
+const appConfigPath = path.join(__dirname, 'configs', 'appconfig.json');
+let appConfig = {
+  cors: {
+    origin: 'http://localhost:5173',
+    credentials: true
+  }
+};
+try {
+  let rawConfig = fs.readFileSync(appConfigPath, 'utf8');
+  if (rawConfig && rawConfig.charCodeAt(0) === 0xFEFF) {
+    rawConfig = rawConfig.slice(1);
+  }
+  const parsed = JSON.parse(rawConfig);
+  appConfig = {
+    ...appConfig,
+    ...parsed,
+    cors: { ...appConfig.cors, ...(parsed.cors || {}) }
+  };
+} catch (error) {
+  console.warn('No se pudo cargar configs/appconfig.json, usando valores por defecto');
+}
 
-// Objeto global para almacenar los códigos de restablecimiento de contraseña
-// Estructura: { [email]: { code: "123456", expires: timestamp } }
+app.use(cors({
+  origin: appConfig.cors.origin,
+  credentials: appConfig.cors.credentials,
+}));
+app.use(express.json());
+app.use('/views', express.static(path.join(__dirname, 'views')));
+app.use('/tailwind', express.static(path.join(__dirname, 'tailwind')));
+app.use('/icons', express.static(path.join(__dirname, 'public', 'icons')));
+
+// objeto global para almacenar los códigos de restablecimiento de contraseña
+// estructura: { [email]: { code: "123456", expires: timestamp } }
 global.resetCodes = {};
 global.ss = new (require('./Session'))(app);
 global.database = new (require('./DataBase'))(() => {global.sc = new (require('./Security'))(app);});
 
-  // 3. (Opcional) Redirigir la raíz '/' al login
+  // redirige la raíz '/' al login
   app.get('/', (req, res) => {
       res.redirect('/login-view');
   });
 
   app.get('/login-view', (req, res) => {
-      // Si ya tiene sesión, lo mandamos directo al panel
+      // si ya tiene sesión, lo mandamos directo al panel
       if (global.ss.sessionExist(req)) {
           return res.redirect('/control-panel');
       }
-      res.sendFile(path.join(__dirname, 'views', 'login.html'));
+      res.sendFile(path.join(__dirname, 'views', 'login', 'index.html'));
   });
 
-  // Registro deshabilitado: redirigir siempre al login
-  app.get('/register', (req, res) => {
-      return res.redirect('/login-view');
-  });
-
-  // Importar path al inicio del archivo si no está
+  // panel restringido a adminá
   app.get('/control-panel', (req, res) => {
-      // 1. Verificar si hay sesión
+      // verifica si hay sesión
       if (!global.ss.sessionExist(req)) {
           return res.redirect('/login-view');
       }
 
-      // 2. Verificar si es ADMIN (Asumiendo que el ID 1 es Admin)
-      // El objeto sessionObject tiene el perfil actual
+      // verifica si es admin (asumiendo que el id 1 es admin)
+      // el objeto sessionobject tiene el perfil actual
       if (global.ss.sessionObject.profile !== 1) { 
           return res.status(403).send("Acceso denegado. Solo administradores.");
       }
 
-      // 3. Servir el archivo HTML
-      res.sendFile(path.join(__dirname, 'views', 'control-panel.html'));
+      // sirve el archivo html
+      res.sendFile(path.join(__dirname, 'views', 'control-panel', 'index.html'));
   });
 
+  // login y creacion de sesion
   app.post('/login', async (req, res) => {
     if (ss.sessionExist(req)) {
         return res.status(400).send('Ya tienes una sesión activa');
@@ -68,7 +91,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         return res.status(401).json({ sts: false, msg: "Datos inválidos" });
     }
     
-    // Buscar los perfiles del usuario
+    // buscar los perfiles del usuario
     let profileResults = await database.executeQuery("security", "getUserProfiles", [ss.sessionObject.userName]);
     
 
@@ -76,7 +99,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         return res.status(403).json({ sts: false, msg: "No tienes perfiles asignados" });
     }
 
-    // Si el usuario tiene más de un perfil, enviamos la lista de perfiles para que seleccione
+    // si el usuario tiene más de un perfil, enviamos la lista de perfiles para que seleccione
     if (profileResults.rows.length > 1) {
         return res.json({
             sts: true,
@@ -88,7 +111,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         });
     }
 
-    // Si solo tiene un perfil, iniciamos sesión directamente
+    // si solo tiene un perfil, iniciamos sesión directamente
     ss.createSession(req, profileResults.rows[0].fk_id_profile);
     console.log(`El usuario ${req.body.email} inició sesión con el perfil ${profileResults.rows[0].profile}`);
 
@@ -99,6 +122,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     });
   });
 
+  // seleccion de perfil cuando hay multiples
   app.post('/select-profile', async (req, res) => {
 
     const { id_profile } = req.body;
@@ -106,7 +130,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         return res.status(400).json({ sts: false, msg: "Debes seleccionar un perfil" });
     }
 
-    // Verificamos si el perfil pertenece al usuario autenticado
+    // verificamos si el perfil pertenece al usuario autenticado
     let profileResults = await database.executeQuery("security", "getUserProfiles", [ss.sessionObject.userName]);
     const validProfile = profileResults.rows.find(row => row.fk_id_profile === id_profile);
 
@@ -114,7 +138,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         return res.status(403).json({ sts: false, msg: "Perfil no válido" });
     }
 
-    // Creamos la sesión con el perfil seleccionado
+    // creamos la sesión con el perfil seleccionado
     ss.createSession(req, id_profile);
     console.log(`El usuario ${ss.sessionObject.userName} seleccionó el perfil ${validProfile.profile}`);
 
@@ -125,10 +149,11 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     });
   });
 
+  // cierre de sesion
   app.post('/logout', async (req, res) => {    
       try {
           await ss.closeSession(req);
-          // Limpia la cookie (el nombre por defecto es "connect.sid")
+          // limpia la cookie (el nombre por defecto es "connect.sid")
           res.clearCookie('connect.sid');
           res.send("Logout ok!");
       } catch (error) {
@@ -136,32 +161,33 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       }
   });
 
+  // crea usuario desde endpoint publico
   app.post('/create-user', async (req, res) => {
     try {
-      // Extraer y validar los datos enviados
+      // extraer y validar los datos enviados
       const { name, last_name, birth_date, email, password, number_id } = req.body;
       if (!name || !last_name || !birth_date || !email || !password || !number_id) {
         return res.status(400).json({ sts: false, msg: "Faltan datos obligatorios" });
       }
   
-      // Insertar la persona en la tabla public.person
+      // insertar la persona en la tabla public.person
       let personResult = await database.executeQuery("public", "createPerson", [name, last_name, birth_date]);
       if (!personResult || !personResult.rows || personResult.rows.length === 0) {
         return res.status(500).json({ sts: false, msg: "No se pudo crear la persona" });
       }
       
-      // Obtener el id_person generado
+      // obtener el id_person generado
       const id_person = personResult.rows[0].id_person;
       console.log(`Persona creada con id_person: ${id_person}`);
       
-      // Insertar el usuario en la tabla security.user
+      // insertar el usuario en la tabla security.user
       let userResult = await database.executeQuery("security", "createUser", [email, password, number_id, id_person]);
 
-      // Obtener el id del usuario recién creado
+      // obtener el id del usuario recién creado
       const id_user = userResult.rows[0].id_user;
       const id_profile = 2;
 
-      // Insertar en la tabla user_profile para asignar el perfil al usuario
+      // insertar en la tabla user_profile para asignar el perfil al usuario
       const userProfileResult = await database.executeQuery("security", "createUserProfile", [
         id_user,
         id_profile
@@ -179,10 +205,11 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     }
   });
 
-  // Endpoint: Enviar código de restablecimiento de contraseña
+  // endpoint: enviar código de restablecimiento de contraseña
+  // envia codigo de reset de password
   app.post('/reset-password', async (req, res) => {
-    const emailRegex = /^\S+@\S+\.\S+$/; // Expresión regular para email
-    const maxEmailLength = 50; // Límite de caracteres para el email
+    const emailRegex = /^\S+@\S+\.\S+$/; // expresion regular para email
+    const maxEmailLength = 50; // limite de caracteres para el email
     try {
       const { email } = req.body;
       if (!email) {
@@ -201,25 +228,36 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         return res.status(400).json({ sts: false, msg: "El correo no está registrado." });
       }
 
-      // Genera un código aleatorio de 6 dígitos
+      // genera un código aleatorio de 6 dígitos
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      // Establece expiración en 15 minutos
+      // establece expiración en 15 minutos
       const expires = Date.now() + 15 * 60 * 1000;
       global.resetCodes[email] = { code, expires, email };
 
-      // Configura el transporter
+      // configura el transporter
+      const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+      const smtpPort = Number(process.env.SMTP_PORT || 587);
+      const smtpSecure = String(process.env.SMTP_SECURE || "false") === "true";
+      const smtpUser = process.env.SMTP_USER || "";
+      const smtpPass = process.env.SMTP_PASS || "";
+      const smtpFrom = process.env.SMTP_FROM || smtpUser;
+
+      if (!smtpUser || !smtpPass) {
+        return res.status(500).json({ sts: false, msg: "SMTP no configurado" });
+      }
+
       const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpSecure,
         auth: {
-          user: "uru.bibliotecabot@gmail.com",
-          pass: "qxln utpf sqlm gmcq"
+          user: smtpUser,
+          pass: smtpPass
         }
       });
 
       const mailOptions = {
-        from: "uru.bibliotecabot@gmail.com",
+        from: smtpFrom,
         to: email,
         subject: "Código para restablecer contraseña",
         text: `Tu código de restablecimiento es: ${code}`
@@ -233,12 +271,13 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     }
   });
 
-  // Endpoint: Confirmar código y actualizar la contraseña
+  // endpoint: confirmar código y actualizar la contraseña
+  // confirma codigo y actualiza password
   app.post('/confirm-reset-password', async (req, res) => {
     try {
       const { code, newPassword } = req.body;
   
-      // Busca un código almacenado sin requerir el email
+      // busca un código almacenado sin requerir el email
       const storedEntry = Object.values(global.resetCodes).find(entry => entry.code === code);
   
       if (!storedEntry) {
@@ -252,7 +291,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         return res.status(400).json({ sts: false, msg: "El código ha expirado." });
       }
   
-      // Actualiza la contraseña en la base de datos
+      // actualiza la contraseña en la base de datos
       let updateResult = await database.executeQuery("security", "updatePassword", [newPassword, email]);
   
       if (updateResult && updateResult.rowCount > 0) {
@@ -268,8 +307,9 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
   });
   
 
-  // Endpoint: Restablecer el email
-  // Se requiere que se envíe la cédula (number_id), la contraseña actual y el nuevo email.
+  // endpoint: restablecer el email
+  // se requiere que se envíe la cédula (number_id), la contraseña actual y el nuevo email.
+  // actualiza email con credenciales actuales
   app.post('/reset-email', async (req, res) => {
     try {
       const { number_id, password, newEmail } = req.body;
@@ -277,13 +317,13 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         return res.status(400).json({ sts: false, msg: "Faltan datos obligatorios" });
       }
 
-      // Verifica que exista un usuario con esa cédula y contraseña.
+      // verifica que exista un usuario con esa cédula y contraseña.
       let userCheck = await database.executeQuery("security", "getUserByNumberAndPassword", [number_id, password]);
       if (!userCheck || !userCheck.rows || userCheck.rows.length === 0) {
         return res.status(400).json({ sts: false, msg: "Credenciales incorrectas" });
       }
 
-      // Actualiza el email en la tabla security.user.
+      // actualiza el email en la tabla security.user.
       let updateResult = await database.executeQuery("security", "updateUserEmail", [newEmail, number_id, password]);
       if (updateResult && updateResult.rowCount > 0) {
         res.json({ sts: true, msg: "Email actualizado correctamente." });
@@ -296,17 +336,19 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     }
   });
 
+  // devuelve menu segun permisos
   app.get('/menu-options', (req, res) => {
-    // Verifica que la sesión exista y que el usuario esté autenticado
+    // verifica que la sesión exista y que el usuario esté autenticado
     if (!req.session || !req.session.profile) {
       return res.status(401).json({ sts: false, msg: "No autorizado" });
     }
-    // Obtiene las opciones de menú basadas en el perfil
+    // obtiene las opciones de menú basadas en el perfil
     const options = sc.getPermissionOption(req);
-    //console.log('Opciones del menu: ', options);
+    //console.log('opciones del menu: ', options);
     res.json({ sts: true, options });
   });
 
+  // valida sesion en front
   app.get('/check-session', (req, res) => {
     if (ss.sessionExist(req)) {
       res.json({ authenticated: true });
@@ -315,6 +357,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     }
   });
 
+  // endpoint unico de despacho de metodos
   app.post('/to-process', async function (req, res) {
     if(ss.sessionExist(req)){
       if(sc.hasPermissionMethod({
@@ -335,6 +378,13 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     }
   });
 
+  // crea un link clickeable en terminales compatibles
+const makeTerminalLink = (label, url) => `\u001b]8;;${url}\u001b\\${label}\u001b]8;;\u001b\\`;
+
+  // arranque del servidor
   app.listen(port, () => {
+    const controlPanelUrl = `http://localhost:${port}/control-panel`;
     console.log(`Servidor activo en el puerto ${port}`);
+    console.log(`Panel de control: ${controlPanelUrl}`);
+    console.log(`Vinculo panel: ${makeTerminalLink('Abrir panel de control', controlPanelUrl)}`);
   });

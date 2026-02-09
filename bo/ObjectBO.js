@@ -1,6 +1,8 @@
+// objectbo: crud de objetos
 const ObjectBO = class {
   constructor() {}
 
+  // lista objetos registrados
   async getObjects(params) {
     try {
       const result = await database.executeQuery('security', 'getObjects', []);
@@ -16,6 +18,7 @@ const ObjectBO = class {
     }
   }
 
+  // crea un objeto en security.object
   async createObject(params) {
     try {
       const { object } = params;
@@ -35,6 +38,7 @@ const ObjectBO = class {
     }
   }
 
+  // actualiza un objeto en security.object
   async updateObject(params) {
     try {
       const { id_object, object } = params;
@@ -54,6 +58,7 @@ const ObjectBO = class {
     }
   }
 
+  // elimina objetos y limpia metodos/permisos
   async deleteObjects(params) {
     try {
       const { ids } = params;
@@ -61,7 +66,7 @@ const ObjectBO = class {
         return { sts: false, msg: 'Faltan datos obligatorios o formato incorrecto' };
       }
 
-      // Limpiar permisos y metodos dependientes antes de borrar objetos.
+      // limpiar permisos y metodos dependientes antes de borrar objetos.
       await database.executeQuery('security', 'deletePermissionMethodsByObjectIds', [ids]);
       await database.executeQuery('security', 'deleteMethodsByObjectIds', [ids]);
 

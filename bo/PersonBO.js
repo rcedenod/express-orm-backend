@@ -1,7 +1,9 @@
+// personbo: crud de personas
 const PersonBO = class {
 
     constructor() {}
 
+    // lista personas disponibles
     async getPeople(params){
         try {
             const result = await database.executeQuery("public", "getPeople", []);

@@ -1,4 +1,5 @@
-﻿const path = require('path');
+// security: permisos y ejecucion dinamica de metodos
+const path = require('path');
 const dayjs = require('dayjs');
 const PROTECTED_DEFAULT_OBJECTS = new Set(['userbo', 'personbo', 'profilebo', 'methodbo', 'objectbo']);
 
@@ -6,12 +7,13 @@ const Security = class {
   constructor() {
     this.methodPermission = new Map();
     this.optionPermission = new Map();
-    // Auditoria opt-in: habilitar con ENABLE_AUDIT=true
+    // auditoria opt-in: habilitar con enable_audit=true
     this.auditEnabled = process.env.ENABLE_AUDIT === 'true';
 
     this.loadPermission().catch((error) => console.error('Error cargando permisos:', error));
   }
 
+  // recarga permisos de metodos y menu desde la base
   async loadPermission() {
     try {
       this.methodPermission.clear();
@@ -37,6 +39,7 @@ const Security = class {
     }
   }
 
+  // valida si un perfil puede ejecutar un metodo
   hasPermissionMethod({ profile, objectName, methodName }) {
     if (parseInt(profile, 10) === 1) {
       return true;
@@ -48,11 +51,13 @@ const Security = class {
     return this.methodPermission.get(key) || false;
   }
 
+  // evita exponer objetos de negocio protegidos a no admin
   isProtectedBusinessObject(objectName) {
     if (!objectName) return false;
     return PROTECTED_DEFAULT_OBJECTS.has(String(objectName).toLowerCase());
   }
 
+  // arma menu segun permisos del perfil actual
   getPermissionOption(req) {
     const options = [];
     const profileId = parseInt(req.session.profile, 10);
@@ -67,11 +72,13 @@ const Security = class {
     return options;
   }
 
+  // aplica permiso en cache
   addMethodPermission(row) {
     const key = `${row.id_profile}_${row.object}_${row.method}`;
     this.methodPermission.set(key, true);
   }
 
+  // actualiza permiso en cache
   updateMethodPermission(oldRow, newRow) {
     const oldKey = `${oldRow.id_profile}_${oldRow.object}_${oldRow.method}`;
     if (this.methodPermission.has(oldKey)) {
@@ -81,16 +88,19 @@ const Security = class {
     this.methodPermission.set(newKey, true);
   }
 
+  // elimina permiso en cache
   removeMethodPermission(row) {
     const key = `${row.id_profile}_${row.object}_${row.method}`;
     this.methodPermission.delete(key);
   }
 
+  // aplica permiso de menu en cache
   addMenuPermission(row) {
     const key = `${row.id_profile}_${row.menu}_${row.fk_id_module}`;
     this.optionPermission.set(key, true);
   }
 
+  // actualiza permiso de menu en cache
   updateMenuPermission(oldRow, newRow) {
     const oldKey = `${oldRow.id_profile}_${oldRow.menu}_${oldRow.fk_id_module}`;
     if (this.optionPermission.has(oldKey)) {
@@ -100,11 +110,13 @@ const Security = class {
     this.optionPermission.set(newKey, true);
   }
 
+  // elimina permiso de menu en cache
   removeMenuPermission(row) {
     const key = `${row.id_profile}_${row.menu}_${row.fk_id_module}`;
     this.optionPermission.delete(key);
   }
 
+  // ejecuta un metodo del bo via reflexion
   async exeMethod(req) {
     try {
       const boPath = path.join(__dirname, 'BO', `${req.body.objectName}.js`);
