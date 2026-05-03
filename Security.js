@@ -1,14 +1,17 @@
 // security: permisos y ejecucion dinamica de metodos
+const fs = require('fs');
 const path = require('path');
 const dayjs = require('dayjs');
-const PROTECTED_DEFAULT_OBJECTS = new Set(['userbo', 'personbo', 'profilebo', 'methodbo', 'objectbo']);
 
 const Security = class {
   constructor() {
     this.methodPermission = new Map();
     this.optionPermission = new Map();
-    // auditoria opt-in: habilitar con enable_audit=true
     this.auditEnabled = process.env.ENABLE_AUDIT === 'true';
+
+    const bosConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'configs', 'bosconfig.json'), 'utf8'));
+    this.allowedObjects = new Set(bosConfig.allowedObjects);
+    this.protectedObjects = new Set(bosConfig.protectedObjects);
 
     this.loadPermission().catch((error) => console.error('Error cargando permisos:', error));
   }
@@ -54,7 +57,7 @@ const Security = class {
   // evita exponer objetos de negocio protegidos a no admin
   isProtectedBusinessObject(objectName) {
     if (!objectName) return false;
-    return PROTECTED_DEFAULT_OBJECTS.has(String(objectName).toLowerCase());
+    return this.protectedObjects.has(String(objectName).toLowerCase());
   }
 
   // arma menu segun permisos del perfil actual
@@ -94,31 +97,12 @@ const Security = class {
     this.methodPermission.delete(key);
   }
 
-  // aplica permiso de menu en cache
-  addMenuPermission(row) {
-    const key = `${row.id_profile}_${row.menu}_${row.fk_id_module}`;
-    this.optionPermission.set(key, true);
-  }
-
-  // actualiza permiso de menu en cache
-  updateMenuPermission(oldRow, newRow) {
-    const oldKey = `${oldRow.id_profile}_${oldRow.menu}_${oldRow.fk_id_module}`;
-    if (this.optionPermission.has(oldKey)) {
-      this.optionPermission.delete(oldKey);
-    }
-    const newKey = `${newRow.fk_id_profile || oldRow.id_profile}_${newRow.menu || oldRow.menu}_${newRow.fk_id_module || oldRow.fk_id_module}`;
-    this.optionPermission.set(newKey, true);
-  }
-
-  // elimina permiso de menu en cache
-  removeMenuPermission(row) {
-    const key = `${row.id_profile}_${row.menu}_${row.fk_id_module}`;
-    this.optionPermission.delete(key);
-  }
-
   // ejecuta un metodo del bo via reflexion
   async exeMethod(req) {
     try {
+      if (!this.allowedObjects.has(req.body.objectName)) {
+        return { sts: false, msg: 'Objeto no válido' };
+      }
       const boPath = path.join(__dirname, 'BO', `${req.body.objectName}.js`);
       const BOClass = require(boPath);
       const obj = new BOClass();
@@ -126,7 +110,8 @@ const Security = class {
       obj.profile = req.session.profile;
 
       if (typeof obj[req.body.methodName] !== 'function') {
-        throw new Error(`El metodo ${req.body.methodName} no existe en ${req.body.objectName}`);
+        console.error(`Metodo no encontrado: ${req.body.methodName} en ${req.body.objectName}`);
+        throw new Error('Metodo no encontrado');
       }
 
       if (this.auditEnabled && !req.body.methodName.toLowerCase().includes('get')) {

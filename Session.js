@@ -2,16 +2,22 @@
 const fs = require('fs');
 const path = require('path');
 const session = require('express-session');
+const bcrypt = require('bcrypt');
 
 const Session = class {
     constructor(app) {
+        const secret = process.env.SESSION_SECRET;
+        if (!secret) {
+            throw new Error('SESSION_SECRET no definido. Crea un archivo .env basado en .env.example');
+        }
+
         // lee config y aplica express-session
-        const configPath = path.join(__dirname, 'configs/sessionconfig.json');        
+        const configPath = path.join(__dirname, 'configs/sessionconfig.json');
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
         // configura express-session con valores del json
         app.use(session({
-            secret: config.secret,
+            secret,
             resave: config.resave,
             saveUninitialized: config.saveUninitialized,
             cookie: config.cookie
@@ -44,8 +50,8 @@ const Session = class {
 
             if (response.rows.length > 0) {
                 const password = response.rows[0].password;
-    
-                if (req.body.password === password) {
+
+                if (await bcrypt.compare(req.body.password, password)) {
                     this.sessionObject.userId = response.rows[0].id_user;
                     this.sessionObject.userName = response.rows[0].email;
                     this.sessionObject.profile = response.rows[0].fk_id_profile;

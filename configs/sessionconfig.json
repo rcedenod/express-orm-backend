@@ -1,5 +1,4 @@
 {
-    "secret": "biblioteca",
     "resave": false,
     "saveUninitialized": true,
     "cookie": {

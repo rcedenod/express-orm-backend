@@ -1,0 +1,4 @@
+{
+    "allowedObjects": ["UserBO", "ProfileBO", "MethodBO", "ObjectBO", "PersonBO"],
+    "protectedObjects": ["userbo", "personbo", "profilebo", "methodbo", "objectbo"]
+}

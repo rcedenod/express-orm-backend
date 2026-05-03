@@ -2,6 +2,7 @@
 const express = require('express');
 let fs = require("fs");
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const app = express();
@@ -181,7 +182,8 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       console.log(`Persona creada con id_person: ${id_person}`);
       
       // insertar el usuario en la tabla security.user
-      let userResult = await database.executeQuery("security", "createUser", [email, password, number_id, id_person]);
+      const hashedPassword = await bcrypt.hash(password, 10);
+      let userResult = await database.executeQuery("security", "createUser", [email, hashedPassword, number_id, id_person]);
 
       // obtener el id del usuario recién creado
       const id_user = userResult.rows[0].id_user;
@@ -292,7 +294,8 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       }
   
       // actualiza la contraseña en la base de datos
-      let updateResult = await database.executeQuery("security", "updatePassword", [newPassword, email]);
+      const hashedNew = await bcrypt.hash(newPassword, 10);
+      let updateResult = await database.executeQuery("security", "updatePassword", [hashedNew, email]);
   
       if (updateResult && updateResult.rowCount > 0) {
         delete global.resetCodes[email];
@@ -317,14 +320,18 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
         return res.status(400).json({ sts: false, msg: "Faltan datos obligatorios" });
       }
 
-      // verifica que exista un usuario con esa cédula y contraseña.
-      let userCheck = await database.executeQuery("security", "getUserByNumberAndPassword", [number_id, password]);
+      // busca usuario por cédula y verifica contraseña con bcrypt
+      let userCheck = await database.executeQuery("security", "getUserByNumberId", [number_id]);
       if (!userCheck || !userCheck.rows || userCheck.rows.length === 0) {
+        return res.status(400).json({ sts: false, msg: "Credenciales incorrectas" });
+      }
+      const validPassword = await bcrypt.compare(password, userCheck.rows[0].password);
+      if (!validPassword) {
         return res.status(400).json({ sts: false, msg: "Credenciales incorrectas" });
       }
 
       // actualiza el email en la tabla security.user.
-      let updateResult = await database.executeQuery("security", "updateUserEmail", [newEmail, number_id, password]);
+      let updateResult = await database.executeQuery("security", "updateUserEmail", [newEmail, number_id]);
       if (updateResult && updateResult.rowCount > 0) {
         res.json({ sts: true, msg: "Email actualizado correctamente." });
       } else {
@@ -358,24 +365,32 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
   });
 
   // endpoint unico de despacho de metodos
-  app.post('/to-process', async function (req, res) {
-    if(ss.sessionExist(req)){
-      if(sc.hasPermissionMethod({
-        profile: req.session.profile,
-        objectName: req.body.objectName,
-        methodName: req.body.methodName,
-        params: req.body.params
-      })){
-        let r = await sc.exeMethod(req);
-        res.send(JSON.stringify(r));
+  app.post('/to-process', async function (req, res, next) {
+    try {
+      if (ss.sessionExist(req)) {
+        if (sc.hasPermissionMethod({
+          profile: req.session.profile,
+          objectName: req.body.objectName,
+          methodName: req.body.methodName,
+          params: req.body.params
+        })) {
+          let r = await sc.exeMethod(req);
+          res.send(JSON.stringify(r));
+        } else {
+          res.send({ sts: false, msg: 'No tiene permisos para ejecutar el metodo...' });
+        }
+      } else {
+        res.send({ sts: false, msg: 'debe hacer login...' });
       }
-      else {
-        res.send({sts:false, msg:'No tiene permisos para ejecutar el metodo...'});
-      }
-      
-    } else {
-      res.send({sts:false, msg:'debe hacer login...'});
+    } catch (err) {
+      next(err);
     }
+  });
+
+  // captura errores no manejados y los loguea sin exponer detalles al cliente
+  app.use((err, req, res, next) => {
+    console.error(`[${new Date().toISOString()}] Error en ${req.method} ${req.path}:`, err);
+    res.status(500).json({ sts: false, msg: 'Error interno del servidor' });
   });
 
   // crea un link clickeable en terminales compatibles

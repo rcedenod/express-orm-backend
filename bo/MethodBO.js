@@ -1,5 +1,10 @@
 // methodbo: crud de metodos y permisos
-const PROTECTED_DEFAULT_OBJECTS = new Set(['userbo', 'personbo', 'profilebo', 'methodbo', 'objectbo']);
+const fs = require('fs');
+const path = require('path');
+const { protectedObjects } = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'configs', 'bosconfig.json'), 'utf8')
+);
+const PROTECTED_DEFAULT_OBJECTS = new Set(protectedObjects);
 
 const MethodBO = class {
   constructor() {}

@@ -1,4 +1,6 @@
 // userbo: crud de usuarios y perfiles
+const bcrypt = require('bcrypt');
+
 const UserBO = class {
     constructor() {}
   
@@ -52,9 +54,10 @@ const UserBO = class {
         console.log(`Persona creada con id_person: ${id_person}`);
         
         // crea usuario en security.user
+        const hashedPassword = await bcrypt.hash(password, 10);
         const userResult = await database.executeQuery("security", "createUser", [
           email,
-          password,
+          hashedPassword,
           numberId,
           id_person
         ]);
