@@ -154,15 +154,56 @@ Todas las consultas SQL viven en `configs/queries.json` organizadas por esquema 
 
 ## Objetos de negocio
 
+Un **Objeto de Negocio (BO)** es una clase que agrupa todas las operaciones relacionadas con una entidad del sistema. La correspondencia con la base de datos es directa: **cada BO opera sobre una o varias tablas**, y sus métodos son las operaciones permitidas sobre esas tablas.
+
+```
+UserBO    ──►  security.user  +  security.user_profile  +  public.person
+ProfileBO ──►  security.profile
+MethodBO  ──►  security.method  +  security.permission_method
+ObjectBO  ──►  security.object
+PersonBO  ──►  public.person
+```
+
+Cuando un BO involucra varias tablas (como `UserBO`, que crea registros en `person`, `user` y `user_profile` en una sola operación), el BO coordina las queries en el orden correcto internamente. El cliente siempre envía un solo payload a `/to-process` sin importar la complejidad de la operación detrás.
+
+### Estructura de un BO
+
+```js
+const MiEntidadBO = class {
+    constructor() {}
+
+    async getMiEntidad(params) {
+        const result = await database.executeQuery("schema", "nombreQuery", []);
+        if (!result || !result.rows) return { sts: false, msg: "Error" };
+        return { sts: true, data: result.rows };
+    }
+
+    async createMiEntidad(params) {
+        const { campo1, campo2 } = params;
+        if (!campo1 || !campo2) return { sts: false, msg: "Faltan datos" };
+        await database.executeQuery("schema", "createMiEntidad", [campo1, campo2]);
+        return { sts: true, msg: "Entidad creada" };
+    }
+};
+
+module.exports = MiEntidadBO;
+```
+
+- `database` y `sc` (Security) están disponibles como globales en todos los BOs.
+- `this.userId` y `this.profile` son inyectados por `Security.js` desde la sesión antes de llamar al método — útil cuando una operación necesita saber quién la ejecuta.
+- Todos los métodos retornan `{ sts: boolean, msg?: string, data?: any }`.
+
+### BOs incluidos
+
 Ubicados en `bo/`, cada uno expone métodos invocables vía `/to-process`:
 
-| BO | Métodos principales |
-|----|-------------------|
-| `UserBO` | `getUsers`, `createUser`, `updateUser`, `deleteUsers` |
-| `ProfileBO` | `getProfiles`, `createProfile`, `updateProfile`, `deleteProfiles` |
-| `MethodBO` | `getMethods`, `createMethod`, `getPermissionMethods`, `syncPermissions` |
-| `ObjectBO` | `getObjects`, `createObject`, `updateObject`, `deleteObjects` |
-| `PersonBO` | `getPeople` |
+| BO | Tablas principales | Métodos principales |
+|----|--------------------|-------------------|
+| `UserBO` | `security.user`, `public.person`, `security.user_profile` | `getUsers`, `createUser`, `updateUser`, `deleteUsers` |
+| `ProfileBO` | `security.profile` | `getProfiles`, `createProfile`, `updateProfile`, `deleteProfiles` |
+| `MethodBO` | `security.method`, `security.permission_method` | `getMethods`, `createMethod`, `getPermissionMethods`, `syncPermissions` |
+| `ObjectBO` | `security.object` | `getObjects`, `createObject`, `updateObject`, `deleteObjects` |
+| `PersonBO` | `public.person` | `getPeople` |
 
 ## Estructura de carpetas
 
