@@ -10,6 +10,7 @@ yarn-error.log*
 # Variables de entorno (no subir claves)
 .env
 .env.*
+!.env.example
 .npmrc
 
 # Archivos del sistema operativo
@@ -30,3 +31,5 @@ coverage/
 
 # Archivos locales del proyecto
 configs/connections.json
+.gitignore
+.claude/
