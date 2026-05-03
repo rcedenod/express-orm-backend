@@ -1,6 +1,6 @@
 {
   "name": "grap-orm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "Dispatcher.js",
   "bin": {
     "grap-orm": "bin/cli.js"
